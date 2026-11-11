@@ -21,9 +21,15 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 
 ## Data
 
-The map shows **approved entries only**: the 39 projects published on ejc.net's Live Journalism map as of
-10 Nov 2026. Personal details of the people who submitted entries are not included. The form under the map in this
-preview is a copy for demonstration: it checks answers but **sends nothing**.
+The map shows the 39 projects published on ejc.net's Live Journalism map as of 10 Nov 2026.
+
+**One test entry goes further:** Live Magazine shows how one project can have several places and dates while
+keeping one project page and one link, and counting once. Its Paris place is approved. The other seven places come
+from Live Magazine submissions still awaiting EJC review, and each is labelled as such. Their dates come from
+livemagazine.com.
+
+Personal details of the people who submitted entries are not included. The form under the map in this preview is a
+copy for demonstration: it checks answers but **sends nothing**.
 
 ## Files
 
