@@ -1,0 +1,147 @@
+{# Live Journalism map + entry form, for ejc.net/resources/live-journalism-map
+   Draft from the Plus alliance for EJC review (10 Nov 2026; updated 11 Nov after EJC's review). Replaces the current map block.
+   Needs: live-journalism-map.css / .js from this folder, served from EJC's assets. #}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.css">
+<link rel="stylesheet" href="{{ url('assets/live-journalism-map/live-journalism-map.css') }}">
+
+<section class="ljm is-muted" id="ljm" data-view="map" aria-label="Live Journalism map and list"
+    data-form-target="#submit-project" data-form-url="https://ejc.net/live-journalism-entry#form-liveJournalismEntryForm">
+    <div class="ljm-toolbar">
+      <label class="ljm-search" id="ljm-search-wrap">
+        <span class="visually-hidden">Search entries</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/></svg>
+        <input id="ljm-q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Search projects, organisers, topics">
+        <button type="button" class="ljm-clear" id="ljm-clear" aria-label="Clear search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/></svg></button>
+      </label>
+
+      <button type="button" class="btn btn-outline mobile-only ljm-filters-btn" id="ljm-filters-btn" aria-controls="ljm-filters" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke-linecap="round"/></svg>
+        Filters <span class="badge" id="ljm-badge"></span>
+      </button>
+      <button type="button" class="btn btn-outline btn-icon mobile-only ljm-share-m" data-share aria-label="Share this view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke-linecap="round"/></svg>
+      </button>
+
+      <div class="ljm-filters" id="ljm-filters" role="group" aria-label="Filters">
+        <div class="sheet-only sheet-head">
+          <div style="width:100%">
+            <div class="sheet-grip" aria-hidden="true"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <h2>Filters</h2>
+              <button type="button" class="btn btn-ghost btn-icon" data-close-filters aria-label="Close filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="ljm-types sheet-group" id="ljm-types">
+          <h3 class="sheet-only">Type of live journalism</h3>
+          <span class="ljm-types__label desktop-only" aria-hidden="true">Type</span>
+        </div>
+        <div class="ljm-selects sheet-group">
+          <h3 class="sheet-only" id="ljm-where-h">Where and when</h3>
+          <label class="visually-hidden" for="ljm-country">Country or region</label>
+          <select class="ljm-select" id="ljm-country"></select>
+          <label class="visually-hidden" for="ljm-when">Event dates</label>
+          <select class="ljm-select" id="ljm-when"></select>
+          <button type="button" class="btn btn-ghost ljm-reset desktop-only" id="ljm-reset" hidden>Reset</button>
+        </div>
+        <div class="sheet-only sheet-foot">
+          <button type="button" class="btn btn-outline" id="ljm-reset-m">Reset</button>
+          <button type="button" class="btn btn-dark" data-close-filters id="ljm-apply">Show results</button>
+        </div>
+      </div>
+
+      <div class="ljm-actions">
+        <button type="button" class="btn btn-ghost" data-share title="Share this view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke-linecap="round"/></svg>
+          <span class="lbl">Share view</span>
+        </button>
+      </div>
+
+      <div class="seg mobile-only ljm-seg" role="group" aria-label="View">
+        <button type="button" data-view-btn="map" aria-pressed="true">Map</button>
+        <button type="button" data-view-btn="list" aria-pressed="false">List <span id="ljm-list-n"></span></button>
+      </div>
+    </div>
+
+    <div class="ljm-body">
+      <div class="ljm-panel" id="ljm-panel">
+        <div class="ljm-panel__head">
+          <div class="ljm-count" id="ljm-count" aria-live="polite"></div>
+          <label class="visually-hidden" for="ljm-sort">Sort list</label>
+          <select class="ljm-select ljm-sort" id="ljm-sort">
+            <option value="latest">Latest activity</option>
+            <option value="az">A–Z</option>
+            <option value="country">Country</option>
+          </select>
+        </div>
+        <ul class="ljm-list" id="ljm-list" aria-label="Projects"></ul>
+        <div class="ljm-empty" id="ljm-empty" hidden>
+          <p><strong>No projects match these filters.</strong></p>
+          <p>Try fewer filters, or <a href="#submit-project" data-goto-form>tell EJC about a project that's missing</a>.</p>
+          <button type="button" class="btn btn-outline" data-reset>Reset filters</button>
+        </div>
+      </div>
+
+      <div class="ljm-mapwrap">
+        {# Tile provider: set these to switch provider without touching the JS. Left out, the map uses
+           OpenStreetMap's standard tiles (tile.openstreetmap.org). Any provider must keep the
+           "© OpenStreetMap contributors" credit. Production setup to agree with Mark (see the notes).
+             data-tile-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+             data-tile-attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+             data-tile-max-zoom="19"
+             data-tile-subdomains=""   (only for URLs with {s}) #}
+        <div id="resourceMap" role="region" aria-label="Map of live journalism projects"></div>
+        {# Keep the pins JSON the current template outputs:
+           <script type="application/json" id="pins-data">…</script>
+           The map reads the same fields (id, lat, lng, title, desc, country, image, thumb,
+           embed, button, events, types, photoCredit).
+
+           Three OPTIONAL fields, proposed after EJC's review (11 Nov 2026). The map works
+           without them; each one switches on a feature once the entry has it. Field handles in
+           brackets are proposals, not existing Craft fields.
+           - "primaryType": one of the four type values. The main format: it sets the pin's colour
+             and icon. The other ticked types still work as filters and show as small dots on the
+             pin. Without it, the first type in "types" is the main one.
+             [entry field: primaryLiveJournalismType, dropdown with the four types;
+              form: Formie radio "Which one is the main format?", shown when 2+ types are ticked]
+           - "locations": one project in several places, so it keeps one entry, one link and
+             counts once. A list of places, each with its own events:
+               "locations": [
+                 {"city": "Paris", "country": "France", "lat": 48.85, "lng": 2.35,
+                  "events": [{"title": "…", "short": "…", "url": "…", "dateISO": "2026-11-19"}]},
+                 {"city": "Brussels", "country": "Belgium", "lat": 50.85, "lng": 4.35, "events": []}
+               ]
+             When "locations" is there, it replaces the top-level lat/lng as the list of pins
+             (keep lat/lng for the first place). Events at the top level belong to the first place.
+             [entry field: a Matrix or Table "locations" with city, country and coordinates, plus
+              a city/country on each event row; form: two new columns on the event rows,
+              "City / Country, if not the main location"]
+           - "live": "What happens live?", one or two sentences (up to 280 characters) on what the
+             audience experiences in the room. Shown first in the project panel and in the list.
+             [entry field: whatHappensLive, plain text; form: optional textarea of the same name] #}
+      </div>
+
+      <article class="ljm-detail" id="ljm-detail" aria-labelledby="ljm-detail-title" tabindex="-1"></article>
+    </div>
+  </section>
+
+{# The CTA on the map scrolls here (data-form-target="#submit-project"). #}
+<section class="submit" id="submit-project" aria-labelledby="submit-title" tabindex="-1">
+    <div class="submit__head">
+      <p class="kicker">Add to the map</p>
+      <h2 id="submit-title">Is your live journalism project missing?</h2>
+      <p>Tell us about it. EJC reviews every entry before it appears on the map. Fields marked <span class="req">*</span> are required.</p>
+    </div>
+    {{ craft.formie.renderForm('liveJournalismEntryForm') }}
+</section>
+
+<div class="ljm-scrim" id="ljm-scrim"></div>
+<div class="ljm-toast" id="ljm-toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js"></script>
+<script src="{{ url('assets/live-journalism-map/live-journalism-map.js') }}"></script>
