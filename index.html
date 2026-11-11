@@ -687,7 +687,31 @@ body.ljm-lock{overflow:hidden}
     if (typeof map === 'undefined' || !map) return 1;
     return Math.max(0, map.getBoundsZoom(WORLD, false));
   }
-  function homeView() { return { center: WORLD_CENTER, zoom: worldZoom() }; }
+  // The key sits bottom-left over the map. Nudge the default view right just enough that no pin is
+  // under it (desktop only: on phones the key is hidden until someone opens it).
+  function keyShift(z, center) {
+    var lg = document.getElementById('ljm-legend');
+    if (!lg || !lg.offsetWidth || typeof entries === 'undefined') return 0;
+    var box = map.getContainer().getBoundingClientRect(), r = lg.getBoundingClientRect();
+    var keyRight = r.right - box.left + 16, keyTop = r.top - box.top - 8;
+    var size = map.getSize(), mid = map.project(center, z);
+    var need = 0;
+    entries.forEach(function (e) {
+      (e.locs && e.locs.length ? e.locs : [e]).forEach(function (l) {
+        var p = map.project([l.lat, l.lng], z).subtract(mid).add(size.divideBy(2));
+        // pins are 36 px wide, anchored at the bottom centre
+        if (p.y > keyTop && p.x - 18 < keyRight) need = Math.max(need, keyRight - (p.x - 18));
+      });
+    });
+    return Math.min(need, size.x * 0.25);
+  }
+  function homeView() {
+    var z = worldZoom();
+    if (typeof map === 'undefined' || !map) return { center: WORLD_CENTER, zoom: z };
+    var shift = keyShift(z, WORLD_CENTER);
+    var c = shift ? map.unproject(map.project(WORLD_CENTER, z).subtract([shift, 0]), z) : WORLD_CENTER;
+    return { center: c, zoom: z };
+  }
   var MOBILE_Q = window.matchMedia('(max-width: 859px)');
 
   /* ------------------------------------------------------------------
@@ -1901,6 +1925,8 @@ body.ljm-lock{overflow:hidden}
   setView(state.view);
   var hasFilter = state.q || state.types.length || state.place || state.when;
   update({ fit: !!hasFilter });
+  // the key exists now, so the default view can make room for it
+  if (!hasFilter && !state.entry) map.setView(homeView().center, homeView().zoom, { animate: false });
   if (state.entry) openEntry(state.entry, { fly: true, source: 'list' });
 
   // expose for console checks / integration tests
