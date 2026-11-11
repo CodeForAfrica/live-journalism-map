@@ -437,6 +437,10 @@
     }
   });
   map.addLayer(cluster);
+  // "Solo" view: while a project with several places is open, only its pins are on the map, one by one
+  // (no clusters), so you see where that project goes. Closing the project brings everything back.
+  var solo = L.layerGroup().addTo(map);
+  var soloId = null;
 
   // One marker per place. Every marker of a project opens the same project panel and the same link.
   // Pin colour and icon = main format; small dots on the pin's shoulder = the other formats it's listed under.
@@ -604,7 +608,7 @@
   $all('[data-tool]', map.getContainer()).forEach(function (b) {
     b.addEventListener('click', function () {
       var tool = b.getAttribute('data-tool');
-      if (tool === 'fit') fitTo(currentLocs);
+      if (tool === 'fit') fitTo(soloId && BY_ID[soloId] ? visibleLocs(BY_ID[soloId]) : currentLocs);
       if (tool === 'locate') {
         if (!navigator.geolocation) { toast('Your browser can’t share a location'); return; }
         toast('Finding you…');
@@ -771,8 +775,18 @@
 
   function renderMarkers(fit) {
     cluster.clearLayers();
-    cluster.addLayers(currentLocs.map(function (l) { return markers[l.key]; }));
+    solo.clearLayers();
+    if (soloId && BY_ID[soloId]) visibleLocs(BY_ID[soloId]).forEach(function (l) { solo.addLayer(markers[l.key]); });
+    else cluster.addLayers(currentLocs.map(function (l) { return markers[l.key]; }));
     if (fit) fitTo(currentLocs);
+  }
+  // Turn the solo view on for a project with 2+ visible places, off otherwise. Returns true if it changed.
+  function setSolo(e) {
+    var want = (e && visibleLocs(e).length > 1) ? e.id : null;
+    if (want === soloId) return false;
+    soloId = want;
+    renderMarkers(false);
+    return true;
   }
 
   function update(opts) {
@@ -944,7 +958,7 @@
   function focusMarker(e, li) {
     var my = ++focusToken;
     var locs = (li != null && e.locs[li]) ? [e.locs[li]] : visibleLocs(e);
-    locs = locs.filter(function (l) { return cluster.hasLayer(markers[l.key]); });
+    locs = locs.filter(function (l) { return cluster.hasLayer(markers[l.key]) || solo.hasLayer(markers[l.key]); });
     if (!locs.length) return;
     map.stop();
     function settle() { setTimeout(function () { if (my === focusToken) setActiveMarker(state.entry); }, 300); }
@@ -958,8 +972,13 @@
         var mobile = MOBILE_Q.matches && detail.classList.contains('is-open');
         var sheetH = mobile ? Math.min(detail.getBoundingClientRect().height || 0, size.y * 0.6) : 0;
         map.once('moveend', function () { if (my === focusToken) settle(); });
+        // pins stand ~44 px above their point, and on desktop the key covers the bottom-left corner
+        var lg = document.getElementById('ljm-legend');
+        var keyW = (!MOBILE_Q.matches && lg && lg.offsetWidth) ? lg.offsetWidth + 24 : 0;
         map.flyToBounds(L.latLngBounds(locs.map(function (l) { return [l.lat, l.lng]; })), {
-          paddingTopLeft: [40, 40], paddingBottomRight: [40, 40 + sheetH], maxZoom: 7, duration: 0.8
+          paddingTopLeft: [Math.max(40, keyW), MOBILE_Q.matches ? 110 : 70],   // phones: also clear the CTA button
+          paddingBottomRight: [70, 30 + sheetH],                                // 70: the buttons on the right
+          maxZoom: 7, duration: 0.8
         });
       }, 80);
       return;
@@ -972,6 +991,7 @@
     }
     function reveal() {
       if (my !== focusToken) return;
+      if (solo.hasLayer(m)) { finish(); return; }   // solo pins are never clustered
       cluster.zoomToShowLayer(m, finish);
     }
     var z = Math.max(map.getZoom(), 6);
@@ -984,12 +1004,14 @@
     var e = BY_ID[id];
     if (!e) return;
     state.entry = id;
+    var soloOn = setSolo(e) && soloId === id;   // just switched to this project's solo view
     renderDetail(e);
     detail.classList.add('is-open');
     var mobile = MOBILE_Q.matches;
     detail.classList.toggle('is-peek', mobile && opts.source === 'map');
     setActiveMarker(id);
     if (opts.fly) focusMarker(e, opts.loc);
+    else if (soloOn) focusMarker(e);   // opened from a pin: frame all of the project's places
     else {
       setTimeout(function () { setActiveMarker(id); }, 0);
       if (mobile && opts.source === 'map') keepAboveSheet(e.locs[opts.loc || 0], false);
@@ -1002,6 +1024,7 @@
   function closeEntry(silent) {
     var was = state.entry;
     state.entry = null;
+    setSolo(null);
     detail.classList.remove('is-open', 'is-peek');
     setActiveMarker(null);
     if (!silent) {
@@ -1049,8 +1072,9 @@
     }
     if (act === 'loc' && e) {
       var li = +b.getAttribute('data-loc');
-      if (!cluster.hasLayer(markers[e.locs[li].key])) {   // that place is hidden by a filter: show it anyway
-        cluster.addLayer(markers[e.locs[li].key]);
+      var mk = markers[e.locs[li].key];
+      if (!cluster.hasLayer(mk) && !solo.hasLayer(mk)) {   // that place is hidden by a filter: show it anyway
+        (soloId === e.id ? solo : cluster).addLayer(mk);
       }
       if (MOBILE_Q.matches) { setView('map'); detail.classList.add('is-peek'); }
       focusMarker(e, li);
