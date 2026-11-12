@@ -18,6 +18,10 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 - **Filters and categories:** EJC's four types of live journalism, each with its own colour and icon, plus filters
   by type (also from the clickable key), country or region and event date, search, and shareable links for any view.
 - **"Add your project":** a button at the top right of the map scrolls down to the entry form under the map.
+- **Group or ungroup pins:** a map button switches clustering off so every place shows as its own pin
+  (`?group=0` in the address starts that way).
+- **Pin styles to compare:** add `?pin=circle`, `?pin=ring` or `?pin=dot` to the address. The default is the
+  teardrop (`?pin=drop`).
 
 ## Data
 
