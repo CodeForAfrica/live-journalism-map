@@ -467,8 +467,9 @@
     if (PIN_STYLE === 'ring') return L.divIcon({ className: 'ljm-pin ljm-pin--ring',
       html: '<span class="ljm-pin__c" style="border-color:' + bg + ';color:' + bg + '">' + glyph + '</span>' + also,
       iconSize: [34, 34], iconAnchor: [17, 17], tooltipAnchor: [0, -18] });
+    // Dot: one size for every project; several formats split the dot into equal slices, main format first
     if (PIN_STYLE === 'dot') return L.divIcon({ className: 'ljm-pin ljm-pin--dot',
-      html: '<span class="ljm-pin__c" style="background:' + bg + '"></span>' + also,
+      html: '<span class="ljm-pin__c" style="background:' + (e.primary ? gradientFor([e.primary].concat(e.also)) : bg) + '"></span>',
       iconSize: [22, 22], iconAnchor: [11, 11], tooltipAnchor: [0, -12] });
     return L.divIcon({ className: 'ljm-pin',
       html: '<span class="ljm-pin__drop" style="background:' + bg + '"></span>' +
@@ -614,10 +615,10 @@
         }).join('') +
         '</ul><button type="button" class="ljm-legend__clear" hidden>Show all types</button>' +
         '<div class="multi"><span class="ljm-legend__sample' + (PIN_STYLE === 'dot' ? ' is-dot' : '') + '" aria-hidden="true">' +
-          (PIN_STYLE === 'dot' ? '<b style="background:' + TYPES[0].hex + '"></b>' : icoFor(TYPES[0].key)) +
-          '<i style="background:' + TYPES[3].hex + '"></i></span>' +
+          (PIN_STYLE === 'dot' ? '<b style="background:' + gradientFor([TYPES[0].key, TYPES[3].key]) + '"></b>'
+            : icoFor(TYPES[0].key) + '<i style="background:' + TYPES[3].hex + '"></i>') + '</span>' +
           '<span>' + (PIN_STYLE === 'dot'
-            ? 'The colour of a pin shows the main format. A smaller dot beside it means the project is also listed under that type.'
+            ? 'A dot split into colours means the project mixes formats. The main format is the first slice, clockwise from the top.'
             : 'Colour and icon show the main format. A small dot means the project is also listed under that type.') + '</span></div>';
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
