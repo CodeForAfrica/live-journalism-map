@@ -170,8 +170,8 @@ button,input,select{font:inherit;color:inherit}
 .ljm-legend.has-filter .ljm-legend__item[aria-pressed="false"]:hover{opacity:.85}
 .ljm-legend__clear{margin:6px 0 0;padding:0;border:0;background:none;font-weight:700;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
 .ljm-legend__clear[hidden]{display:none}
-/* "Dark grey" = OpenFreeMap Dark lifted to charcoal */
-.ljm.is-dim-map .maplibregl-canvas{filter:brightness(1.75) contrast(.9) saturate(1.1)}
+/* "Dark" = OpenFreeMap Dark brightened to charcoal */
+.ljm.is-dim-map .maplibregl-canvas{filter:brightness(1.75) contrast(.9) saturate(1.1) brightness(1.75) contrast(.9) saturate(1.1)}   /* the brightened Dark Jacopo picked (filter applied twice in that preview) */
 /* map-style picker */
 .ljm-tools{position:relative}
 .ljm-basemaps{position:absolute;top:0;right:calc(100% + 8px);width:264px;max-height:min(430px,70vh);overflow-y:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:6px;display:grid;gap:2px;z-index:5}
@@ -1131,9 +1131,8 @@ body.ljm-lock{overflow:hidden}
       style: 'https://tiles.openfreemap.org/styles/positron', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#fafaf8 55%,#d4dadc 55%)' },
     'liberty': { label: 'Colourful', note: 'OpenFreeMap Liberty: detailed, vivid', type: 'vector',
       style: 'https://tiles.openfreemap.org/styles/liberty', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#f8f4f0 55%,#a0c8f0 55%)' },
-    'dark': { label: 'Dark', note: 'OpenFreeMap Dark', type: 'vector',
-      style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#2b2d31 55%,#17181b 55%)' },
-    'dim': { label: 'Dark grey', note: 'OpenFreeMap Dark, lifted to charcoal: the lights-off view', type: 'vector', dim: true,
+    // Dark = OpenFreeMap Dark brightened to charcoal (12 Nov 2026); the near-black original isn't offered
+    'dark': { label: 'Dark', note: 'OpenFreeMap Dark, brightened to charcoal', type: 'vector', dim: true,
       style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#55585e 55%,#3d4045 55%)' },
     'fiord': { label: 'Dusk', note: 'OpenFreeMap Fiord: dark blue-grey, softer than Dark', type: 'vector',
       style: 'https://tiles.openfreemap.org/styles/fiord', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#45516e 55%,#38435c 55%)' },
@@ -1159,6 +1158,7 @@ body.ljm-lock{overflow:hidden}
   if (!BASE_KEYS.length) BASE_KEYS = ['osm-grey'];
   var BASE_DEFAULT = (function () {
     var q = new URLSearchParams(location.search).get('basemap');
+    if (q === 'dim') q = 'dark';   // earlier name of the brightened dark
     if (q && BASE_KEYS.indexOf(q) !== -1) return q;
     if (BASEMAPS.custom) return 'custom';
     var d = mapEl.getAttribute('data-basemap');
@@ -1180,9 +1180,9 @@ body.ljm-lock{overflow:hidden}
     return mlReady;
   }
   var baseLayer = null, baseKey = null, fileNote = null, lightsPrev = null;
-  // "Lights off" goes to the softer dark grey (12 Nov 2026), or to Dark if dark grey isn't offered.
-  var DARK_KEYS = ['dim', 'dark', 'fiord'];
-  var LIGHTS_KEY = BASE_KEYS.indexOf('dim') !== -1 ? 'dim' : BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : null;
+  // "Lights off" goes to Dark (the brightened charcoal version).
+  var DARK_KEYS = ['dark', 'fiord'];
+  var LIGHTS_KEY = BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : BASE_KEYS.indexOf('fiord') !== -1 ? 'fiord' : null;
   // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
   function swapBase(layer, attr) {
     if (baseLayer) map.removeLayer(baseLayer);

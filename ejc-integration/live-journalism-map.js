@@ -417,9 +417,8 @@
       style: 'https://tiles.openfreemap.org/styles/positron', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#fafaf8 55%,#d4dadc 55%)' },
     'liberty': { label: 'Colourful', note: 'OpenFreeMap Liberty: detailed, vivid', type: 'vector',
       style: 'https://tiles.openfreemap.org/styles/liberty', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#f8f4f0 55%,#a0c8f0 55%)' },
-    'dark': { label: 'Dark', note: 'OpenFreeMap Dark', type: 'vector',
-      style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#2b2d31 55%,#17181b 55%)' },
-    'dim': { label: 'Dark grey', note: 'OpenFreeMap Dark, lifted to charcoal: the lights-off view', type: 'vector', dim: true,
+    // Dark = OpenFreeMap Dark brightened to charcoal (12 Nov 2026); the near-black original isn't offered
+    'dark': { label: 'Dark', note: 'OpenFreeMap Dark, brightened to charcoal', type: 'vector', dim: true,
       style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#55585e 55%,#3d4045 55%)' },
     'fiord': { label: 'Dusk', note: 'OpenFreeMap Fiord: dark blue-grey, softer than Dark', type: 'vector',
       style: 'https://tiles.openfreemap.org/styles/fiord', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#45516e 55%,#38435c 55%)' },
@@ -445,6 +444,7 @@
   if (!BASE_KEYS.length) BASE_KEYS = ['osm-grey'];
   var BASE_DEFAULT = (function () {
     var q = new URLSearchParams(location.search).get('basemap');
+    if (q === 'dim') q = 'dark';   // earlier name of the brightened dark
     if (q && BASE_KEYS.indexOf(q) !== -1) return q;
     if (BASEMAPS.custom) return 'custom';
     var d = mapEl.getAttribute('data-basemap');
@@ -466,9 +466,9 @@
     return mlReady;
   }
   var baseLayer = null, baseKey = null, fileNote = null, lightsPrev = null;
-  // "Lights off" goes to the softer dark grey (12 Nov 2026), or to Dark if dark grey isn't offered.
-  var DARK_KEYS = ['dim', 'dark', 'fiord'];
-  var LIGHTS_KEY = BASE_KEYS.indexOf('dim') !== -1 ? 'dim' : BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : null;
+  // "Lights off" goes to Dark (the brightened charcoal version).
+  var DARK_KEYS = ['dark', 'fiord'];
+  var LIGHTS_KEY = BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : BASE_KEYS.indexOf('fiord') !== -1 ? 'fiord' : null;
   // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
   function swapBase(layer, attr) {
     if (baseLayer) map.removeLayer(baseLayer);

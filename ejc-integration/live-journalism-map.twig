@@ -88,10 +88,11 @@
       <div class="ljm-mapwrap">
         {# Map styles: visitors can switch style with the map-styles button. All are free and need no API key.
              data-basemap="positron"    the default style (positron if left out). One of: osm-grey, osm, positron, liberty, dark,
-                                        dim, fiord, hot, topo, satellite (positron/liberty/dark/dim/fiord are OpenFreeMap vector styles;
+                                        fiord, hot, topo, satellite (positron/liberty/dark/fiord are OpenFreeMap vector styles;
+                                        dark is OpenFreeMap Dark brightened to charcoal;
                                         MapLibre loads from cdn.jsdelivr.net only when one is picked)
              data-basemaps="osm-grey,positron,dark,satellite"   which styles to offer (default: all of them)
-           The moon button ("lights off") switches to "dim" (Dark grey) and back; it shows when "dim" or "dark" is offered.
+           The moon button ("lights off") switches to "dark" and back; it shows when "dark" (or "fiord") is offered.
              data-group="1" / "0"   start with pins grouped / ungrouped (default: grouped on phones, ungrouped on desktop)
            Own tiles instead: set data-tile-url below; it becomes the default, listed as "Map".
            Tile provider: set these to switch provider without touching the JS. Left out, the map uses
