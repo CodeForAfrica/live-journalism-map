@@ -18,9 +18,11 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 - **Filters and categories:** EJC's four types of live journalism, each with its own colour and icon, plus filters
   by type (also from the clickable key), country or region and event date, search, and shareable links for any view.
 - **"Add your project":** a button at the top right of the map scrolls down to the entry form under the map.
-- **Group or ungroup pins:** every place shows as its own pin by default; a map button groups nearby pins into
-  clusters (`?group=1` in the address, or `data-group="1"` on ejc.net, starts grouped).
-- **Map styles:** a map button lets visitors pick the background map. All eight options are free and need no API
+- **Group or ungroup pins:** on desktop every place shows as its own pin; on phones nearby pins start grouped.
+  A map button switches between the two (`?group=1` / `?group=0` in the address, or `data-group` on ejc.net, overrides
+  the default).
+- **Map styles:** the default is Light (OpenFreeMap Positron). A moon button turns the lights off (the Dark style)
+  and back on, and a map-styles button lets visitors pick any background. All eight options are free and need no API
   key: OpenStreetMap (grey or colour), OpenFreeMap Light, Colourful and Dark, Humanitarian (OSM France),
   Terrain (OpenTopoMap) and Satellite (NASA Blue Marble). Add `?basemap=positron` (or `osm`, `liberty`, `dark`,
   `hot`, `topo`, `satellite`) to the address to open with one; on ejc.net, `data-basemap` sets the default and

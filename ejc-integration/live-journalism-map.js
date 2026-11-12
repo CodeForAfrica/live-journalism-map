@@ -444,7 +444,8 @@
     if (q && BASE_KEYS.indexOf(q) !== -1) return q;
     if (BASEMAPS.custom) return 'custom';
     var d = mapEl.getAttribute('data-basemap');
-    return d && BASE_KEYS.indexOf(d) !== -1 ? d : BASE_KEYS[0];
+    if (d && BASE_KEYS.indexOf(d) !== -1) return d;
+    return BASE_KEYS.indexOf('positron') !== -1 ? 'positron' : BASE_KEYS[0];   // default: Light (OpenFreeMap Positron), 12 Nov 2026
   })();
   map.setMaxZoom(19);   // the pin clusters need it even before a tile layer is added
 
@@ -460,7 +461,7 @@
     mlReady.catch(function () { mlReady = null; });
     return mlReady;
   }
-  var baseLayer = null, baseKey = null, fileNote = null;
+  var baseLayer = null, baseKey = null, fileNote = null, lightsPrev = null;
   // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
   function swapBase(layer, attr) {
     if (baseLayer) map.removeLayer(baseLayer);
@@ -474,6 +475,15 @@
     if (!b) return;
     baseKey = key;
     ljm.classList.toggle('is-muted', !!b.muted);
+    ljm.classList.toggle('is-dark-map', key === 'dark');
+    var lb = $('[data-tool="lights"]', map.getContainer());
+    if (lb) {
+      var off = key === 'dark';
+      lb.setAttribute('aria-pressed', String(off));
+      lb.innerHTML = off ? ICON.sun : ICON.moon;
+      lb.title = off ? 'Lights on: back to the light map' : 'Lights off: dark map';
+      lb.setAttribute('aria-label', off ? 'Light map' : 'Dark map');
+    }
     $all('[data-basemap-key]', map.getContainer()).forEach(function (el) { el.setAttribute('aria-checked', String(el.getAttribute('data-basemap-key') === key)); });
     // A page opened straight from disk (file://) sends no Referer, and OpenStreetMap's servers answer such
     // requests with an "Access blocked" tile: say why instead. Never happens on ejc.net (https).
@@ -534,7 +544,9 @@
   // Grouping on/off (map button). Off = every pin shown on its own, no clusters.
   var flat = L.layerGroup().addTo(map);
   // Pins start ungrouped (12 Nov 2026). ?group=1 in the address, or data-group="1" on #ljm, starts grouped.
-  var grouped = (new URLSearchParams(location.search).get('group') || ljm.getAttribute('data-group')) === '1';
+  // Phones start grouped (pins pile up on a small screen), desktop starts ungrouped (12 Nov 2026).
+  var groupSetting = new URLSearchParams(location.search).get('group') || ljm.getAttribute('data-group');
+  var grouped = groupSetting ? groupSetting === '1' : MOBILE_Q.matches;
 
   // One marker per place. Every marker of a project opens the same project panel and the same link.
   // Pin colour and icon = main format; small dots on the pin's shoulder = the other formats it's listed under.
@@ -612,6 +624,8 @@
 
   /* custom controls ------------------------------------------------ */
   var ICON = {
+    moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
     layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z"/><path d="M2.5 12.5 12 17.5l9.5-5" stroke-linecap="round"/><path d="M2.5 16.5 12 21.5l9.5-5" stroke-linecap="round"/></svg>',
     group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="14.8" r="1.6" fill="currentColor" stroke="none"/></svg>',
     ungroup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5.5" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="18" cy="5.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="18.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="18.5" cy="17.5" r="2.2" fill="currentColor" stroke="none"/></svg>',
@@ -636,6 +650,7 @@
               '<span class="ljm-basemap__sw" style="background:' + bm.swatch + '"></span><span class="ljm-basemap__txt"><b>' + esc(bm.label) + '</b>' +
               (bm.note ? '<small>' + esc(bm.note) + '</small>' : '') + '</span></button>'; }).join('') +
           '</div>' : '') +
+        (BASE_KEYS.indexOf('dark') !== -1 ? '<button type="button" class="ljm-tool" data-tool="lights" title="Lights off: dark map" aria-label="Dark map" aria-pressed="false">' + ICON.moon + '</button>' : '') +
         '<button type="button" class="ljm-tool ljm-legend__toggle" data-tool="key" title="Key" aria-label="Show map key" aria-pressed="false">' + ICON.key + '</button>';
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
@@ -773,6 +788,10 @@
         toast(grouped ? 'Nearby pins grouped' : 'Showing every pin separately');
         renderMarkers(false);
         setTimeout(function () { setActiveMarker(state.entry); }, 0);
+      }
+      if (tool === 'lights') {
+        if (baseKey === 'dark') setBasemap(lightsPrev && lightsPrev !== 'dark' ? lightsPrev : (BASE_DEFAULT !== 'dark' ? BASE_DEFAULT : BASE_KEYS[0]));
+        else { lightsPrev = baseKey; setBasemap('dark'); }
       }
       if (tool === 'basemap') {
         var panel = $('#ljm-basemaps'), show = panel.hidden;
