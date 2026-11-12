@@ -20,6 +20,11 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 - **"Add your project":** a button at the top right of the map scrolls down to the entry form under the map.
 - **Group or ungroup pins:** a map button switches clustering off so every place shows as its own pin
   (`?group=0` in the address starts that way).
+- **Map styles:** a map button lets visitors pick the background map. All eight options are free and need no API
+  key: OpenStreetMap (grey or colour), OpenFreeMap Light, Colourful and Dark, Humanitarian (OSM France),
+  Terrain (OpenTopoMap) and Satellite (NASA Blue Marble). Add `?basemap=positron` (or `osm`, `liberty`, `dark`,
+  `hot`, `topo`, `satellite`) to the address to open with one; on ejc.net, `data-basemap` sets the default and
+  `data-basemaps` which ones to offer.
 - **Pins:** small dots, all the same size, coloured by format (chosen 12 Nov 2026). A project with several formats
   gets a split dot, main format first. The earlier designs can still be compared by
   adding `?pin=drop` (teardrop with icon), `?pin=circle` or `?pin=ring` to the address.

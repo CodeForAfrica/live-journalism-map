@@ -86,9 +86,15 @@
       </div>
 
       <div class="ljm-mapwrap">
-        {# Tile provider: set these to switch provider without touching the JS. Left out, the map uses
+        {# Map styles: visitors can switch style with the map-styles button. All are free and need no API key.
+             data-basemap="osm-grey"    the default style. One of: osm-grey, osm, positron, liberty, dark,
+                                        hot, topo, satellite (positron/liberty/dark are OpenFreeMap vector styles;
+                                        MapLibre loads from cdn.jsdelivr.net only when one is picked)
+             data-basemaps="osm-grey,positron,dark,satellite"   which styles to offer (default: all of them)
+           Own tiles instead: set data-tile-url below; it becomes the default, listed as "Map".
+           Tile provider: set these to switch provider without touching the JS. Left out, the map uses
            OpenStreetMap's standard tiles (tile.openstreetmap.org). Any provider must keep the
-           "© OpenStreetMap contributors" credit. Production setup to agree with Mark (see the notes).
+           "© OpenStreetMap contributors" credit. Production setup to agree with EJC's tech team.
              data-tile-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
              data-tile-attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
              data-tile-max-zoom="19"

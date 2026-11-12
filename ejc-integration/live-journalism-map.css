@@ -155,6 +155,19 @@ button,input,select{font:inherit;color:inherit}
 .ljm-legend.has-filter .ljm-legend__item[aria-pressed="false"]:hover{opacity:.85}
 .ljm-legend__clear{margin:6px 0 0;padding:0;border:0;background:none;font-weight:700;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
 .ljm-legend__clear[hidden]{display:none}
+/* map-style picker */
+.ljm-tools{position:relative}
+.ljm-basemaps{position:absolute;top:0;right:calc(100% + 8px);width:264px;max-height:min(430px,70vh);overflow-y:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:6px;display:grid;gap:2px;z-index:5}
+.ljm-basemaps[hidden]{display:none}
+.ljm-basemap{display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;text-align:left;color:var(--ink)}
+.ljm-basemap:hover{background:var(--soft)}
+.ljm-basemap[aria-checked="true"]{background:#E9EDFF}
+.ljm-basemap__sw{flex:none;width:34px;height:34px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.ljm-basemap__txt{display:grid;line-height:1.25}
+.ljm-basemap__txt b{font-size:13.5px;font-weight:800}
+.ljm-basemap__txt small{font-size:11.5px;color:var(--muted)}
+.ljm-basemap[aria-checked="true"] .ljm-basemap__txt b::after{content:" ✓";color:var(--blue)}
+@media (max-width:859px){ .ljm-basemaps{width:228px} }
 /* call to action, top right of the map */
 .ljm-cta{display:inline-flex!important;align-items:center;gap:8px;min-height:var(--tap);padding:0 18px 0 14px;border-radius:999px;background:var(--green);color:var(--ink)!important;font-weight:800;font-size:14.5px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.22);margin:12px 12px 0!important;white-space:nowrap;cursor:pointer;transition:background .15s,transform .15s}
 .ljm-cta:hover{background:#0FC468;transform:translateY(-1px)}

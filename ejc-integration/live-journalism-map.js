@@ -401,18 +401,107 @@
   // A page opened straight from disk (file://) sends no Referer, and OpenStreetMap's servers answer such
   // requests with an "Access blocked" tile. So in that case don't request OSM tiles at all: say why instead.
   // Never happens on ejc.net, which is served over https.
-  var tileUrl = mapEl.getAttribute('data-tile-url') || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  map.setMaxZoom(tileOpts.maxZoom);   // the pin clusters need it even when no tile layer is added
-  if (location.protocol === 'file:' && /(^|\.)openstreetmap\.org\//.test(tileUrl.replace(/^https?:\/\//, ''))) {
-    var fileNote = L.DomUtil.create('div', 'ljm-file-note', map.getContainer());
-    fileNote.setAttribute('role', 'note');
-    fileNote.innerHTML = '<strong>The map background can’t load when this page is opened as a file.</strong> ' +
-      'OpenStreetMap only serves map tiles to pages with a web address. ' +
-      esc(mapEl.getAttribute('data-file-hint') || 'Open the page from a web server instead.') +
-      ' The pins, filters and list below still work.';
-    L.DomEvent.disableClickPropagation(fileNote);
-  } else {
-    L.tileLayer(tileUrl, tileOpts).addTo(map);
+  // ---- Basemaps: all free, no API key (checked 12 Nov 2026). People can switch with the map-styles button.
+  // EJC settings on #resourceMap:
+  //   data-basemap   the default style (a key below), e.g. "positron"; ?basemap=… in the address overrides it
+  //   data-basemaps  which styles to offer, comma-separated, e.g. "positron,osm,dark,satellite" (default: all)
+  //   data-tile-url  (+ the other data-tile-* settings above) adds EJC's own tile source as "custom" and makes it the default
+  var OFM_ATTR = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>, data ' + OSM_ATTR;
+  var BASEMAPS = {
+    'osm-grey': { label: 'OpenStreetMap, grey', note: 'Calm background, pins stand out', type: 'raster', muted: true,
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attr: OSM_ATTR, swatch: 'linear-gradient(135deg,#e6e7e8,#cfd2d5)' },
+    'osm': { label: 'OpenStreetMap, colour', note: 'The standard OpenStreetMap look', type: 'raster',
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attr: OSM_ATTR, swatch: 'linear-gradient(135deg,#f2efe9 55%,#aad3df 55%)' },
+    'positron': { label: 'Light', note: 'OpenFreeMap Positron: clean, English labels', type: 'vector',
+      style: 'https://tiles.openfreemap.org/styles/positron', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#fafaf8 55%,#d4dadc 55%)' },
+    'liberty': { label: 'Colourful', note: 'OpenFreeMap Liberty: detailed, vivid', type: 'vector',
+      style: 'https://tiles.openfreemap.org/styles/liberty', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#f8f4f0 55%,#a0c8f0 55%)' },
+    'dark': { label: 'Dark', note: 'OpenFreeMap Dark', type: 'vector',
+      style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#2b2d31 55%,#17181b 55%)' },
+    'hot': { label: 'Humanitarian', note: 'OpenStreetMap France, HOT style', type: 'raster', subdomains: 'abc',
+      url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      attr: OSM_ATTR + ', style <a href="https://www.hotosm.org/" target="_blank" rel="noopener">HOT</a>, tiles <a href="https://openstreetmap.fr/" target="_blank" rel="noopener">OSM France</a>',
+      swatch: 'linear-gradient(135deg,#f1ece2 55%,#e8c9a0 55%)' },
+    'topo': { label: 'Terrain', note: 'OpenTopoMap: relief and contours', type: 'raster', subdomains: 'abc', maxNativeZoom: 17,
+      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      attr: 'Map data: ' + OSM_ATTR + ', SRTM | Style: &copy; <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC-BY-SA</a>)',
+      swatch: 'linear-gradient(135deg,#dfe8c8 55%,#c9b98f 55%)' },
+    'satellite': { label: 'Satellite', note: 'NASA Blue Marble: world view only, blurry close up', type: 'raster', maxNativeZoom: 8,
+      url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
+      attr: 'Imagery: <a href="https://earthdata.nasa.gov/gibs" target="_blank" rel="noopener">NASA GIBS</a>, Blue Marble', swatch: 'linear-gradient(135deg,#2f5f3a 50%,#1b3f66 50%)' }
+  };
+  if (mapEl.getAttribute('data-tile-url')) {
+    BASEMAPS.custom = { label: 'Map', note: '', type: 'raster', url: mapEl.getAttribute('data-tile-url'), attr: tileOpts.attribution,
+      maxNativeZoom: tileOpts.maxZoom, subdomains: tileOpts.subdomains, swatch: '#e6e7e8' };
+  }
+  var BASE_KEYS = (mapEl.getAttribute('data-basemaps') || Object.keys(BASEMAPS).join(','))
+    .split(',').map(function (k) { return k.trim(); }).filter(function (k) { return BASEMAPS[k]; });
+  if (BASEMAPS.custom && BASE_KEYS.indexOf('custom') === -1) BASE_KEYS.unshift('custom');
+  if (!BASE_KEYS.length) BASE_KEYS = ['osm-grey'];
+  var BASE_DEFAULT = (function () {
+    var q = new URLSearchParams(location.search).get('basemap');
+    if (q && BASE_KEYS.indexOf(q) !== -1) return q;
+    if (BASEMAPS.custom) return 'custom';
+    var d = mapEl.getAttribute('data-basemap');
+    return d && BASE_KEYS.indexOf(d) !== -1 ? d : BASE_KEYS[0];
+  })();
+  map.setMaxZoom(19);   // the pin clusters need it even before a tile layer is added
+
+  // MapLibre (for the OpenFreeMap styles) loads only when one of them is picked
+  var mlReady = null;
+  function loadMapLibre() {
+    if (mlReady) return mlReady;
+    function js(src) { return new Promise(function (res, rej) { var sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css';
+    document.head.appendChild(css);
+    mlReady = js('https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js')
+      .then(function () { return js('https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js'); });
+    mlReady.catch(function () { mlReady = null; });
+    return mlReady;
+  }
+  var baseLayer = null, baseKey = null, fileNote = null;
+  // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
+  function swapBase(layer, attr) {
+    if (baseLayer) map.removeLayer(baseLayer);
+    var ac = map.attributionControl;
+    ac._attributions = {};
+    if (attr) ac.addAttribution(attr); else ac._update();
+    baseLayer = layer ? layer.addTo(map) : null;
+  }
+  function setBasemap(key) {
+    var b = BASEMAPS[key];
+    if (!b) return;
+    baseKey = key;
+    ljm.classList.toggle('is-muted', !!b.muted);
+    $all('[data-basemap-key]', map.getContainer()).forEach(function (el) { el.setAttribute('aria-checked', String(el.getAttribute('data-basemap-key') === key)); });
+    // A page opened straight from disk (file://) sends no Referer, and OpenStreetMap's servers answer such
+    // requests with an "Access blocked" tile: say why instead. Never happens on ejc.net (https).
+    if (fileNote) { fileNote.remove(); fileNote = null; }
+    if (location.protocol === 'file:' && b.type === 'raster' && /(^|\.)openstreetmap\.org\//.test(b.url.replace(/^https?:\/\//, ''))) {
+      swapBase(null, b.attr);
+      fileNote = L.DomUtil.create('div', 'ljm-file-note', map.getContainer());
+      fileNote.setAttribute('role', 'note');
+      fileNote.innerHTML = '<strong>The map background can’t load when this page is opened as a file.</strong> ' +
+        'OpenStreetMap only serves map tiles to pages with a web address. ' +
+        esc(mapEl.getAttribute('data-file-hint') || 'Open the page from a web server, or pick another map style.') +
+        ' The pins, filters and list below still work.';
+      L.DomEvent.disableClickPropagation(fileNote);
+      return;
+    }
+    if (b.type === 'vector') {
+      loadMapLibre().then(function () {
+        if (baseKey !== key) return;   // someone picked another style meanwhile
+        swapBase(L.maplibreGL({ style: b.style, interactive: false }));   // the style supplies its own credit
+      }, function () {
+        toast('That map style could not load. Showing OpenStreetMap instead.');
+        setBasemap(BASE_KEYS.indexOf('osm-grey') !== -1 ? 'osm-grey' : 'osm');
+      });
+      return;
+    }
+    var o = { maxZoom: 19 };
+    if (b.maxNativeZoom) o.maxNativeZoom = b.maxNativeZoom;
+    if (b.subdomains) o.subdomains = b.subdomains;
+    swapBase(L.tileLayer(b.url, o), b.attr);
   }
   map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
 
@@ -521,6 +610,7 @@
 
   /* custom controls ------------------------------------------------ */
   var ICON = {
+    layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z"/><path d="M2.5 12.5 12 17.5l9.5-5" stroke-linecap="round"/><path d="M2.5 16.5 12 21.5l9.5-5" stroke-linecap="round"/></svg>',
     group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="14.8" r="1.6" fill="currentColor" stroke="none"/></svg>',
     ungroup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5.5" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="18" cy="5.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="18.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="18.5" cy="17.5" r="2.2" fill="currentColor" stroke="none"/></svg>',
     fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3Z"/></svg>',
@@ -537,7 +627,13 @@
       box.innerHTML =
         '<button type="button" class="ljm-tool" data-tool="fit" title="Show all results" aria-label="Zoom to show all results">' + ICON.fit + '</button>' +
         '<button type="button" class="ljm-tool" data-tool="group" title="' + (grouped ? 'Show every pin separately' : 'Group nearby pins') + '" aria-label="Show every pin separately" aria-pressed="' + !grouped + '">' + (grouped ? ICON.group : ICON.ungroup) + '</button>' +
-        '<button type="button" class="ljm-tool" data-tool="tone" title="Colour map" aria-label="Show the map in full colour" aria-pressed="false">' + ICON.tone + '</button>' +
+        (BASE_KEYS.length > 1 ? '<button type="button" class="ljm-tool" data-tool="basemap" title="Map style" aria-label="Choose the map style" aria-expanded="false" aria-controls="ljm-basemaps">' + ICON.layers + '</button>' +
+          '<div class="ljm-basemaps" id="ljm-basemaps" role="radiogroup" aria-label="Map style" hidden>' +
+          BASE_KEYS.map(function (k) { var bm = BASEMAPS[k];
+            return '<button type="button" role="radio" aria-checked="false" class="ljm-basemap" data-basemap-key="' + k + '">' +
+              '<span class="ljm-basemap__sw" style="background:' + bm.swatch + '"></span><span class="ljm-basemap__txt"><b>' + esc(bm.label) + '</b>' +
+              (bm.note ? '<small>' + esc(bm.note) + '</small>' : '') + '</span></button>'; }).join('') +
+          '</div>' : '') +
         '<button type="button" class="ljm-tool ljm-legend__toggle" data-tool="key" title="Key" aria-label="Show map key" aria-pressed="false">' + ICON.key + '</button>';
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
@@ -598,6 +694,30 @@
   map.addControl(new Cta());
   map.addControl(new Tools());
 
+  // map-style picker
+  function closeBasemaps(focusBtn) {
+    var pnl = $('#ljm-basemaps'), bt = $('[data-tool="basemap"]', map.getContainer());
+    if (!pnl || pnl.hidden) return;
+    pnl.hidden = true;
+    if (bt) { bt.setAttribute('aria-expanded', 'false'); if (focusBtn) bt.focus(); }
+  }
+  var bmPanel = $('#ljm-basemaps');
+  if (bmPanel) {
+    bmPanel.addEventListener('click', function (ev) {
+      var k = ev.target.closest('[data-basemap-key]');
+      if (!k) return;
+      setBasemap(k.getAttribute('data-basemap-key'));
+      closeBasemaps(true);
+    });
+    bmPanel.addEventListener('keydown', function (ev) {
+      var items = $all('[data-basemap-key]', bmPanel), i = items.indexOf(document.activeElement);
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); items[(i + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
+    });
+    document.addEventListener('click', function (ev) { if (!ev.target.closest('#ljm-basemaps, [data-tool="basemap"]')) closeBasemaps(false); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeBasemaps(true); });
+  }
+  setBasemap(BASE_DEFAULT);
+
   function toggleType(k) {
     var i = state.types.indexOf(k);
     if (i === -1) state.types.push(k); else state.types.splice(i, 1);
@@ -651,6 +771,12 @@
         toast(grouped ? 'Nearby pins grouped' : 'Showing every pin separately');
         renderMarkers(false);
         setTimeout(function () { setActiveMarker(state.entry); }, 0);
+      }
+      if (tool === 'basemap') {
+        var panel = $('#ljm-basemaps'), show = panel.hidden;
+        panel.hidden = !show;
+        b.setAttribute('aria-expanded', String(show));
+        if (show) { var cur = panel.querySelector('[aria-checked="true"]') || panel.querySelector('button'); if (cur) cur.focus(); }
       }
       if (tool === 'tone') {
         var muted = ljm.classList.toggle('is-muted');
