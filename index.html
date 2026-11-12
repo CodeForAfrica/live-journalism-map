@@ -446,6 +446,18 @@ body.ljm-lock{overflow:hidden}
 }
 </style>
 <style data-ejc-header>
+/* submission card: links out to EJC's live form (preview only; on ejc.net the form itself sits here) */
+.submit-out{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 32px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px 28px}
+.submit-out__lead{margin:0 0 4px;font-weight:700}
+.submit-out__go{display:grid;gap:8px;justify-items:center}
+.submit-out__btn{min-height:56px;padding:0 26px;font-size:16px}
+.submit-out__go .submit__small{margin:0}
+@media (max-width:859px){
+  .submit-out{grid-template-columns:1fr;padding:18px 16px}
+  .submit-out__go{justify-items:stretch;text-align:center}
+  .submit-out__btn{justify-content:center}
+}
+
 /* ---------- EJC site header (standalone preview only) ---------- */
 .ejc-head{position:relative;z-index:2600;max-width:1280px;margin:0 auto;padding:24px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .ejc-logo{display:flex;align-items:flex-start;gap:10px;text-decoration:none;color:inherit;flex:none}
@@ -587,119 +599,37 @@ body.ljm-lock{overflow:hidden}
     <div class="submit__head">
       <p class="kicker">Add to the map</p>
       <h2 id="submit-title">Is your live journalism project missing?</h2>
-      <p>Tell us about it. EJC reviews every entry before it appears on the map. Fields marked <span class="req">*</span> are required.</p>
+      <p>Tell EJC about it with the entry form on ejc.net. EJC reviews every entry before it appears on the map.</p>
     </div>
-
-    <form class="f" id="ljm-form" novalidate>
-      <fieldset>
-        <legend>Your project</legend>
-        <div class="f-grid">
-          <div class="f-field span2">
-            <label class="f-l" for="f-title">Project title<span class="req">*</span></label>
-            <input type="text" id="f-title" name="fields[projectTitle]" required autocomplete="off">
-          </div>
-          <div class="f-field span2">
-            <label class="f-l" for="f-desc">Small description<span class="req">*</span></label>
-            <textarea id="f-desc" name="fields[smallDescription]" maxlength="600" required aria-describedby="f-desc-n"></textarea>
-            <span class="f-count" id="f-desc-n" aria-live="polite">0 / 600</span>
-          </div>
-          <div class="f-field span2">
-            <label class="f-l" for="f-live">What happens live?</label>
-            <textarea id="f-live" name="fields[whatHappensLive]" maxlength="280" rows="2" aria-describedby="f-live-h f-live-n"></textarea>
-            <p class="f-help" id="f-live-h">One or two sentences on what the audience experiences in the room, for example a staged investigation followed by a facilitated discussion with the audience.</p>
-            <span class="f-count" id="f-live-n" aria-live="polite">0 / 280</span>
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Main location</legend>
-        <p class="f-help">If the project travels, add the other cities to its events below. It stays one entry with one link.</p>
-        <div class="f-grid">
-          <div class="f-field"><label class="f-l" for="f-city">City</label><input type="text" id="f-city" name="fields[location][city]" autocomplete="address-level2"></div>
-          <div class="f-field"><label class="f-l" for="f-zip">ZIP / Postal Code</label><input type="text" id="f-zip" name="fields[location][zip]" autocomplete="postal-code"></div>
-          <div class="f-field"><label class="f-l" for="f-state">State / Province</label><input type="text" id="f-state" name="fields[location][state]" autocomplete="address-level1"></div>
-          <div class="f-field"><label class="f-l" for="f-country">Country<span class="req">*</span></label><select id="f-country" name="fields[location][country]" required data-countries></select></div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Image or video<span class="req">*</span></legend>
-        <p class="f-help" id="f-media-q">Do you want to include an image or a video?</p>
-        <div class="f-choices" role="radiogroup" aria-labelledby="f-media-q">
-          <label class="f-choice"><input type="radio" name="fields[doYouWantToIncludeAnImageOrAVideoYoutubeVimeo]" value="Image" required checked><span class="box" aria-hidden="true"></span>Image</label>
-          <label class="f-choice"><input type="radio" name="fields[doYouWantToIncludeAnImageOrAVideoYoutubeVimeo]" value="Video"><span class="box" aria-hidden="true"></span>Video</label>
-        </div>
-        <div class="f-grid" data-media="Image">
-          <div class="f-field"><label class="f-l" for="f-image">Main image<span class="req">*</span></label>
-            <input type="file" id="f-image" name="fields[mainImage][]" accept=".avif,.bmp,.gif,.heic,.heif,.jp2,.jpeg,.jpg,.jpx,.png,.svg,.tif,.tiff,.webp" required></div>
-          <div class="f-field"><label class="f-l" for="f-credit">Photo credit</label><input type="text" id="f-credit" name="fields[photoCredit]"></div>
-        </div>
-        <div class="f-grid" data-media="Video" hidden>
-          <div class="f-field span2"><label class="f-l" for="f-video">Video link<span class="req">*</span></label>
-            <input type="url" id="f-video" name="fields[videoLink]" placeholder="https://" aria-describedby="f-video-h">
-            <p class="f-help" id="f-video-h">These can be from any popular streaming service: YouTube, Vimeo, Instagram,...</p></div>
-        </div>
-        <div class="f-field">
-          <label class="f-l" for="f-web">Link to website<span class="req">*</span></label>
-          <input type="url" id="f-web" name="fields[linkToWebsite]" required placeholder="https://" aria-describedby="f-web-h">
-          <p class="f-help" id="f-web-h">A link to the newsroom or journalism group doing the performance</p>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Event dates</legend>
-        <div class="f-events" id="f-events"></div>
-        <button type="button" class="btn btn-outline" id="f-add-event" style="justify-self:start">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>Add event</button>
-      </fieldset>
-
-      <fieldset>
-        <legend id="f-types-l">Live journalism type<span class="req">*</span></legend>
-        <p class="f-help" id="f-types-h">Tick every format that applies. The project appears under each one.</p>
-        <div class="f-choices" role="group" aria-labelledby="f-types-l" aria-describedby="f-types-h"><label class="f-choice"><input type="checkbox" name="fields[liveJournalismType][]" value="High-production/performance"><span class="box" aria-hidden="true"></span><span class="ico" data-ico="High-production/performance"></span>High-production/performance</label><label class="f-choice"><input type="checkbox" name="fields[liveJournalismType][]" value="Spoken/Slam"><span class="box" aria-hidden="true"></span><span class="ico" data-ico="Spoken/Slam"></span>Spoken/Slam</label><label class="f-choice"><input type="checkbox" name="fields[liveJournalismType][]" value="Community/participatory"><span class="box" aria-hidden="true"></span><span class="ico" data-ico="Community/participatory"></span>Community/participatory</label><label class="f-choice"><input type="checkbox" name="fields[liveJournalismType][]" value="Dialogue/forum"><span class="box" aria-hidden="true"></span><span class="ico" data-ico="Dialogue/forum"></span>Dialogue/forum</label></div>
-        <p class="f-error" id="f-types-err" hidden>Choose at least one type.</p>
-        <div class="f-main" id="f-main" hidden>
-          <p class="f-l" id="f-main-q">Which one is the main format?<span class="req">*</span></p>
-          <p class="f-help">It sets the colour and icon of the project's pin.</p>
-          <div class="f-choices" role="radiogroup" aria-labelledby="f-main-q" id="f-main-choices"></div>
-        </div>
-      </fieldset>
-
-      <fieldset class="f-private">
-        <legend>Your information</legend>
-        <p class="f-help">Your personal information will not be published publicly.</p>
-        <div class="f-grid">
-          <div class="f-field"><label class="f-l" for="f-first">First name<span class="req">*</span></label><input type="text" id="f-first" name="fields[firstName]" required autocomplete="given-name"></div>
-          <div class="f-field"><label class="f-l" for="f-last">Last name<span class="req">*</span></label><input type="text" id="f-last" name="fields[lastName]" required autocomplete="family-name"></div>
-          <div class="f-field"><label class="f-l" for="f-email">Email address<span class="req">*</span></label><input type="email" id="f-email" name="fields[email]" required autocomplete="email"></div>
-          <div class="f-field"><label class="f-l" for="f-res">Country of residence</label><select id="f-res" name="fields[countryOfResidence]" data-countries autocomplete="country-name"></select></div>
-          <div class="f-field span2"><label class="f-l" for="f-job">Job title<span class="req">*</span></label><input type="text" id="f-job" name="fields[jobTitle]" required autocomplete="organization-title"></div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>I agree to privacy policy<span class="req">*</span></legend>
-        <label class="f-agree"><input type="checkbox" name="fields[iAgreeToPrivacyPolicy]" value="1" required>
-          <span>I agree that my data may be processed for the purpose of reaching out about my Live Journalism entry. All processing happens according to the <a href="https://ejc.net/privacy" target="_blank" rel="noopener">EJC Privacy Policy</a>.</span></label>
-        <input class="hp" type="text" name="beesknees" tabindex="-1" autocomplete="off" aria-hidden="true">
-      </fieldset>
-
-      <div class="f-actions">
-        <button type="submit" class="btn btn-dark">Submit</button>
-        <p class="f-proto">Prototype: this copy checks your answers but sends nothing. On ejc.net, EJC's own entry form sits here.</p>
+    <div class="submit-out">
+      <div>
+        <p class="submit-out__lead">The form asks for:</p>
+        <ul class="submit__list">
+          <li>your project's title and a short description</li>
+          <li>where it takes place: city and country</li>
+          <li>an image or a video link, and your website</li>
+          <li>up to five events, each with a date and a link</li>
+          <li>the type of live journalism</li>
+          <li>your contact details, which are not published</li>
+        </ul>
       </div>
-    </form>
-
-    <div class="f-done" id="f-done" role="status" tabindex="-1" hidden>
-      <h3>Thanks, that's everything the form needs.</h3>
-      <p>This is a prototype, so nothing was sent or stored. On ejc.net your entry would go to EJC for review before it appears on the map.</p>
-      <button type="button" class="btn btn-outline" id="f-again">Start a new entry</button>
+      <div class="submit-out__go">
+        <a class="btn btn-primary submit-out__btn" href="https://ejc.net/live-journalism-entry#form-liveJournalismEntryForm" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+          Open the entry form on ejc.net <span aria-hidden="true">↗</span>
+        </a>
+        <p class="submit__small">Opens in a new tab.</p>
+      </div>
     </div>
   </section>
 
   <p class="page-foot">
-    Prototype notes: map tiles © OpenStreetMap contributors, served by the OpenStreetMap Foundation. Spotted a mistake in the base map? <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Report a map issue</a>. Videos only load from YouTube (privacy-enhanced mode) when you press play. Pins are approved projects only: from the entry-form export where it covers them, otherwise from the live ejc.net map. Text and links are as submitted; where a submitted image link had expired, the image from the approved ejc.net entry is used. Names, email addresses and job titles of the people who submitted are not included. The form below is a working copy of EJC's entry form for this prototype: it checks your answers but sends nothing.
+    Prototype notes: the background maps are free, open map styles (OpenFreeMap by default), each credited in the
+    map's corner. Spotted a mistake in a map? <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Report it to OpenStreetMap</a>.
+    Videos only load from YouTube (privacy-enhanced mode) when you press play. The pins are EJC's approved projects;
+    one test entry, Live Magazine, also shows places from submissions still awaiting EJC review, labelled as such.
+    Names, email addresses and job titles of the people who submitted are not included. The button under the map
+    opens EJC's live entry form on ejc.net, so entries go straight to EJC.
   </p>
 </main>
 

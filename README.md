@@ -17,7 +17,7 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
   panning so the page still scrolls past the map.
 - **Filters and categories:** EJC's four types of live journalism, each with its own colour and icon, plus filters
   by type (also from the clickable key), country or region and event date, search, and shareable links for any view.
-- **"Add your project":** a button at the top right of the map scrolls down to the entry form under the map.
+- **"Add your project":** a button at the top right of the map scrolls down to the section for adding a project.
 - **Group or ungroup pins:** on desktop every place shows as its own pin; on phones nearby pins start grouped.
   A map button switches between the two (`?group=1` / `?group=0` in the address, or `data-group` on ejc.net, overrides
   the default).
@@ -40,8 +40,11 @@ keeping one project page and one link, and counting once. Its Paris place is app
 from Live Magazine submissions still awaiting EJC review, and each is labelled as such. Their dates come from
 livemagazine.com.
 
-Personal details of the people who submitted entries are not included. The form under the map in this preview is a
-copy for demonstration: it checks answers but **sends nothing**.
+Personal details of the people who submitted entries are not included.
+
+**Adding a project:** in this preview, the section under the map links to EJC's live entry form on ejc.net, so
+entries go straight to EJC. EJC's form can't be embedded here: its security cookies aren't sent from other sites. On
+ejc.net, the template renders the form itself in that section.
 
 ## Files
 
