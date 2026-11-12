@@ -35,7 +35,7 @@ copy for demonstration: it checks answers but **sends nothing**.
 
 | Path | What it is |
 |---|---|
-| `index.html` | Standalone preview, one file |
+| `index.html` | Standalone preview, one file. It shows the ejc.net header (logo and menu, linking to the real site) so the map can be seen in context; on ejc.net the site's own header is used |
 | `ejc-integration/live-journalism-map.twig` | Template for ejc.net (Craft CMS): the map plus EJC's own entry form (Formie) under it |
 | `ejc-integration/live-journalism-map.css`, `.js` | The map's styles and script, for EJC's assets |
 | `ejc-integration/test-harness.html` | Loads the integration files with the same data, for testing |
