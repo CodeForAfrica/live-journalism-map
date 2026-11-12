@@ -170,6 +170,8 @@ button,input,select{font:inherit;color:inherit}
 .ljm-legend.has-filter .ljm-legend__item[aria-pressed="false"]:hover{opacity:.85}
 .ljm-legend__clear{margin:6px 0 0;padding:0;border:0;background:none;font-weight:700;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
 .ljm-legend__clear[hidden]{display:none}
+/* "Dark grey" = OpenFreeMap Dark lifted to charcoal */
+.ljm.is-dim-map .maplibregl-canvas{filter:brightness(1.75) contrast(.9) saturate(1.1)}
 /* map-style picker */
 .ljm-tools{position:relative}
 .ljm-basemaps{position:absolute;top:0;right:calc(100% + 8px);width:264px;max-height:min(430px,70vh);overflow-y:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:6px;display:grid;gap:2px;z-index:5}
@@ -1131,6 +1133,10 @@ body.ljm-lock{overflow:hidden}
       style: 'https://tiles.openfreemap.org/styles/liberty', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#f8f4f0 55%,#a0c8f0 55%)' },
     'dark': { label: 'Dark', note: 'OpenFreeMap Dark', type: 'vector',
       style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#2b2d31 55%,#17181b 55%)' },
+    'dim': { label: 'Dark grey', note: 'OpenFreeMap Dark, lifted to charcoal: the lights-off view', type: 'vector', dim: true,
+      style: 'https://tiles.openfreemap.org/styles/dark', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#55585e 55%,#3d4045 55%)' },
+    'fiord': { label: 'Dusk', note: 'OpenFreeMap Fiord: dark blue-grey, softer than Dark', type: 'vector',
+      style: 'https://tiles.openfreemap.org/styles/fiord', attr: OFM_ATTR, swatch: 'linear-gradient(135deg,#45516e 55%,#38435c 55%)' },
     'hot': { label: 'Humanitarian', note: 'OpenStreetMap France, HOT style', type: 'raster', subdomains: 'abc',
       url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
       attr: OSM_ATTR + ', style <a href="https://www.hotosm.org/" target="_blank" rel="noopener">HOT</a>, tiles <a href="https://openstreetmap.fr/" target="_blank" rel="noopener">OSM France</a>',
@@ -1174,6 +1180,9 @@ body.ljm-lock{overflow:hidden}
     return mlReady;
   }
   var baseLayer = null, baseKey = null, fileNote = null, lightsPrev = null;
+  // "Lights off" goes to the softer dark grey (12 Nov 2026), or to Dark if dark grey isn't offered.
+  var DARK_KEYS = ['dim', 'dark', 'fiord'];
+  var LIGHTS_KEY = BASE_KEYS.indexOf('dim') !== -1 ? 'dim' : BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : null;
   // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
   function swapBase(layer, attr) {
     if (baseLayer) map.removeLayer(baseLayer);
@@ -1187,10 +1196,11 @@ body.ljm-lock{overflow:hidden}
     if (!b) return;
     baseKey = key;
     ljm.classList.toggle('is-muted', !!b.muted);
-    ljm.classList.toggle('is-dark-map', key === 'dark');
+    ljm.classList.toggle('is-dark-map', DARK_KEYS.indexOf(key) !== -1);
+    ljm.classList.toggle('is-dim-map', !!b.dim);
     var lb = $('[data-tool="lights"]', map.getContainer());
     if (lb) {
-      var off = key === 'dark';
+      var off = DARK_KEYS.indexOf(key) !== -1;
       lb.setAttribute('aria-pressed', String(off));
       lb.innerHTML = off ? ICON.sun : ICON.moon;
       lb.title = off ? 'Lights on: back to the light map' : 'Lights off: dark map';
@@ -1362,7 +1372,7 @@ body.ljm-lock{overflow:hidden}
               '<span class="ljm-basemap__sw" style="background:' + bm.swatch + '"></span><span class="ljm-basemap__txt"><b>' + esc(bm.label) + '</b>' +
               (bm.note ? '<small>' + esc(bm.note) + '</small>' : '') + '</span></button>'; }).join('') +
           '</div>' : '') +
-        (BASE_KEYS.indexOf('dark') !== -1 ? '<button type="button" class="ljm-tool" data-tool="lights" title="Lights off: dark map" aria-label="Dark map" aria-pressed="false">' + ICON.moon + '</button>' : '') +
+        (LIGHTS_KEY ? '<button type="button" class="ljm-tool" data-tool="lights" title="Lights off: dark map" aria-label="Dark map" aria-pressed="false">' + ICON.moon + '</button>' : '') +
         '<button type="button" class="ljm-tool ljm-legend__toggle" data-tool="key" title="Key" aria-label="Show map key" aria-pressed="false">' + ICON.key + '</button>';
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
@@ -1406,6 +1416,10 @@ body.ljm-lock{overflow:hidden}
   // own wheel listener, so detach that listener. Two-finger pan and pinch on touch screens stay as they are.
   if (map.gestureHandling) L.DomEvent.off(map.getContainer(), 'wheel', map.gestureHandling._handleScroll, map.gestureHandling);
   map.scrollWheelZoom.disable();
+  // ...and keep it off: the gesture plugin switches wheel zoom back on whenever the pointer enters the map
+  // (its mouseover handler re-enables dragging and wheel zoom together), so scrolling the page with the
+  // pointer over the map zoomed it. Dragging still comes back on; wheel zoom no longer can.
+  map.scrollWheelZoom.enable = function () { return this; };
 
   // Reset button under + / −: zooms back out to the starting view
   var rst = L.DomUtil.create('a', 'ljm-reset-view', map.zoomControl.getContainer());
@@ -1502,8 +1516,10 @@ body.ljm-lock{overflow:hidden}
         setTimeout(function () { setActiveMarker(state.entry); }, 0);
       }
       if (tool === 'lights') {
-        if (baseKey === 'dark') setBasemap(lightsPrev && lightsPrev !== 'dark' ? lightsPrev : (BASE_DEFAULT !== 'dark' ? BASE_DEFAULT : BASE_KEYS[0]));
-        else { lightsPrev = baseKey; setBasemap('dark'); }
+        if (DARK_KEYS.indexOf(baseKey) !== -1) {
+          var back = lightsPrev && DARK_KEYS.indexOf(lightsPrev) === -1 ? lightsPrev : BASE_DEFAULT;
+          setBasemap(DARK_KEYS.indexOf(back) === -1 ? back : (BASE_KEYS.indexOf('positron') !== -1 ? 'positron' : BASE_KEYS[0]));
+        } else { lightsPrev = baseKey; setBasemap(LIGHTS_KEY); }
       }
       if (tool === 'basemap') {
         var panel = $('#ljm-basemaps'), show = panel.hidden;

@@ -21,11 +21,11 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 - **Group or ungroup pins:** on desktop every place shows as its own pin; on phones nearby pins start grouped.
   A map button switches between the two (`?group=1` / `?group=0` in the address, or `data-group` on ejc.net, overrides
   the default).
-- **Map styles:** the default is Light (OpenFreeMap Positron). A moon button turns the lights off (the Dark style)
-  and back on, and a map-styles button lets visitors pick any background. All eight options are free and need no API
-  key: OpenStreetMap (grey or colour), OpenFreeMap Light, Colourful and Dark, Humanitarian (OSM France),
-  Terrain (OpenTopoMap) and Satellite (NASA Blue Marble). Add `?basemap=positron` (or `osm`, `liberty`, `dark`,
-  `hot`, `topo`, `satellite`) to the address to open with one; on ejc.net, `data-basemap` sets the default and
+- **Map styles:** the default is Light (OpenFreeMap Positron). A moon button turns the lights off (Dark grey: OpenFreeMap Dark
+  lifted to charcoal) and back on, and a map-styles button lets visitors pick any background. All ten options are free and need no API
+  key: OpenStreetMap (grey or colour), OpenFreeMap Light, Colourful, Dark, Dark grey and Dusk (Fiord), Humanitarian (OSM France),
+  Terrain (OpenTopoMap) and Satellite (NASA Blue Marble). Add `?basemap=positron` (or `osm`, `liberty`, `dark`, `dim`,
+  `fiord`, `hot`, `topo`, `satellite`) to the address to open with one; on ejc.net, `data-basemap` sets the default and
   `data-basemaps` which ones to offer.
 - **Pins:** small dots, all the same size, coloured by format (chosen 12 Nov 2026). A project with several formats
   gets a split dot, main format first. The earlier designs can still be compared by
