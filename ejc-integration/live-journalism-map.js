@@ -54,8 +54,9 @@
     entries.forEach(function (e) {
       (e.locs && e.locs.length ? e.locs : [e]).forEach(function (l) {
         var p = map.project([l.lat, l.lng], z).subtract(mid).add(size.divideBy(2));
-        // pins are 36 px wide, anchored at the bottom centre
-        if (p.y > keyTop && p.x - 18 < keyRight) need = Math.max(need, keyRight - (p.x - 18));
+        // pin footprint: the teardrop is 36 px wide, anchored at its tip; the round styles are centred on the point
+        var half = PIN_STYLE === 'dot' ? 11 : PIN_STYLE === 'drop' ? 18 : 17, below = PIN_STYLE === 'drop' ? 0 : half;
+        if (p.y + below > keyTop && p.x - half < keyRight) need = Math.max(need, keyRight - (p.x - half));
       });
     });
     return Math.min(need, size.x * 0.25);
@@ -532,7 +533,8 @@
   var soloId = null;
   // Grouping on/off (map button). Off = every pin shown on its own, no clusters.
   var flat = L.layerGroup().addTo(map);
-  var grouped = new URLSearchParams(location.search).get('group') !== '0';   // ?group=0 starts ungrouped
+  // Pins start ungrouped (12 Nov 2026). ?group=1 in the address, or data-group="1" on #ljm, starts grouped.
+  var grouped = (new URLSearchParams(location.search).get('group') || ljm.getAttribute('data-group')) === '1';
 
   // One marker per place. Every marker of a project opens the same project panel and the same link.
   // Pin colour and icon = main format; small dots on the pin's shoulder = the other formats it's listed under.
