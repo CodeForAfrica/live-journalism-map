@@ -20,8 +20,8 @@ Built by Code for Africa for EJC, fellow members of the Plus alliance.
 - **"Add your project":** a button at the top right of the map scrolls down to the entry form under the map.
 - **Group or ungroup pins:** a map button switches clustering off so every place shows as its own pin
   (`?group=0` in the address starts that way).
-- **Pin styles to compare:** add `?pin=circle`, `?pin=ring` or `?pin=dot` to the address. The default is the
-  teardrop (`?pin=drop`).
+- **Pins:** small dots coloured by main format (chosen 12 Nov 2026). The earlier designs can still be compared by
+  adding `?pin=drop` (teardrop with icon), `?pin=circle` or `?pin=ring` to the address.
 
 ## Data
 

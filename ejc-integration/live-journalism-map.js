@@ -449,11 +449,11 @@
   // Pin colour and icon = main format; small dots on the pin's shoulder = the other formats it's listed under.
   var markers = {};
   var CAN_HOVER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  // Pin style: "drop" (default teardrop), "circle", "ring" or "dot". Set with ?pin=… in the address
+  // Pin style: "dot" (default since 12 Nov 2026), "drop" (teardrop), "circle" or "ring". Set with ?pin=… in the address
   // (for comparing options) or data-pin-style on #ljm.
   var PIN_STYLE = (function () {
     var q = (new URLSearchParams(location.search).get('pin') || ljm.getAttribute('data-pin-style') || '').toLowerCase();
-    return ({ circle: 1, ring: 1, dot: 1 })[q] ? q : 'drop';
+    return ({ drop: 1, circle: 1, ring: 1 })[q] ? q : 'dot';
   })();
   ljm.setAttribute('data-pin-style', PIN_STYLE);
   function pinIcon(e) {
@@ -535,7 +535,7 @@
       var box = L.DomUtil.create('div', 'ljm-tools');
       box.innerHTML =
         '<button type="button" class="ljm-tool" data-tool="fit" title="Show all results" aria-label="Zoom to show all results">' + ICON.fit + '</button>' +
-        '<button type="button" class="ljm-tool" data-tool="group" title="' + (grouped ? 'Show every pin separately' : 'Group nearby pins') + '" aria-label="Group nearby pins" aria-pressed="' + grouped + '">' + (grouped ? ICON.group : ICON.ungroup) + '</button>' +
+        '<button type="button" class="ljm-tool" data-tool="group" title="' + (grouped ? 'Show every pin separately' : 'Group nearby pins') + '" aria-label="Show every pin separately" aria-pressed="' + !grouped + '">' + (grouped ? ICON.group : ICON.ungroup) + '</button>' +
         '<button type="button" class="ljm-tool" data-tool="tone" title="Colour map" aria-label="Show the map in full colour" aria-pressed="false">' + ICON.tone + '</button>' +
         '<button type="button" class="ljm-tool ljm-legend__toggle" data-tool="key" title="Key" aria-label="Show map key" aria-pressed="false">' + ICON.key + '</button>';
       L.DomEvent.disableClickPropagation(box);
@@ -613,9 +613,12 @@
             icoFor(t.key) + '<span class="lbl">' + esc(t.long) + '</span><span class="n"></span></button></li>';
         }).join('') +
         '</ul><button type="button" class="ljm-legend__clear" hidden>Show all types</button>' +
-        '<div class="multi"><span class="ljm-legend__sample" aria-hidden="true">' + icoFor(TYPES[0].key) +
+        '<div class="multi"><span class="ljm-legend__sample' + (PIN_STYLE === 'dot' ? ' is-dot' : '') + '" aria-hidden="true">' +
+          (PIN_STYLE === 'dot' ? '<b style="background:' + TYPES[0].hex + '"></b>' : icoFor(TYPES[0].key)) +
           '<i style="background:' + TYPES[3].hex + '"></i></span>' +
-          '<span>Colour and icon show the main format. A small dot means the project is also listed under that type.</span></div>';
+          '<span>' + (PIN_STYLE === 'dot'
+            ? 'The colour of a pin shows the main format. A smaller dot beside it means the project is also listed under that type.'
+            : 'Colour and icon show the main format. A small dot means the project is also listed under that type.') + '</span></div>';
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
       L.DomEvent.on(box, 'click', function (ev) {
@@ -641,7 +644,7 @@
       if (tool === 'fs') setFullscreen(!ljm.classList.contains('is-fs'));
       if (tool === 'group') {
         grouped = !grouped;
-        b.setAttribute('aria-pressed', String(grouped));
+        b.setAttribute('aria-pressed', String(!grouped));   // pressed = every pin shown separately
         b.innerHTML = grouped ? ICON.group : ICON.ungroup;
         b.title = grouped ? 'Show every pin separately' : 'Group nearby pins';
         toast(grouped ? 'Nearby pins grouped' : 'Showing every pin separately');
