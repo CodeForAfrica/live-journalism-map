@@ -650,8 +650,12 @@
     moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>',
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
     layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z"/><path d="M2.5 12.5 12 17.5l9.5-5" stroke-linecap="round"/><path d="M2.5 16.5 12 21.5l9.5-5" stroke-linecap="round"/></svg>',
-    group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="14.8" r="1.6" fill="currentColor" stroke="none"/></svg>',
-    ungroup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5.5" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="18" cy="5.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="18.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="18.5" cy="17.5" r="2.2" fill="currentColor" stroke="none"/></svg>',
+    group: '<svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" aria-hidden="true"><g transform="rotate(-90 12 12)">' +
+      '<circle cx="12" cy="12" r="7.5" stroke="#2649FF" stroke-dasharray="18 29.12"/>' +
+      '<circle cx="12" cy="12" r="7.5" stroke="#009E73" stroke-dasharray="10 37.12" stroke-dashoffset="-19"/>' +
+      '<circle cx="12" cy="12" r="7.5" stroke="#E69F00" stroke-dasharray="9 38.12" stroke-dashoffset="-30"/>' +
+      '<circle cx="12" cy="12" r="7.5" stroke="#CC79A7" stroke-dasharray="6 41.12" stroke-dashoffset="-40"/></g>' +
+      '<circle cx="12" cy="12" r="4" fill="currentColor"/></svg>',   // donut chart, like the cluster markers
     fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3Z"/></svg>',
     locate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke-linecap="round"/></svg>',
     fs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -665,7 +669,7 @@
       var box = L.DomUtil.create('div', 'ljm-tools');
       box.innerHTML =
         '<button type="button" class="ljm-tool" data-tool="fit" title="Show all results" aria-label="Zoom to show all results">' + ICON.fit + '</button>' +
-        '<button type="button" class="ljm-tool" data-tool="group" title="' + (grouped ? 'Show every pin separately' : 'Group nearby pins') + '" aria-label="Show every pin separately" aria-pressed="' + !grouped + '">' + (grouped ? ICON.group : ICON.ungroup) + '</button>' +
+        '<button type="button" class="ljm-tool" data-tool="group" title="' + (grouped ? 'Show every pin separately' : 'Group nearby pins') + '" aria-label="Group nearby pins" aria-pressed="' + grouped + '">' + ICON.group + '</button>' +
         (BASE_KEYS.length > 1 ? '<button type="button" class="ljm-tool" data-tool="basemap" title="Map style" aria-label="Choose the map style" aria-expanded="false" aria-controls="ljm-basemaps">' + ICON.layers + '</button>' +
           '<div class="ljm-basemaps" id="ljm-basemaps" role="radiogroup" aria-label="Map style" hidden>' +
           BASE_KEYS.map(function (k) { var bm = BASEMAPS[k];
@@ -809,8 +813,7 @@
       if (tool === 'fs') setFullscreen(!ljm.classList.contains('is-fs'));
       if (tool === 'group') {
         grouped = !grouped;
-        b.setAttribute('aria-pressed', String(!grouped));   // pressed = every pin shown separately
-        b.innerHTML = grouped ? ICON.group : ICON.ungroup;
+        b.setAttribute('aria-pressed', String(grouped));   // pressed = nearby pins grouped (donut on)
         b.title = grouped ? 'Show every pin separately' : 'Group nearby pins';
         toast(grouped ? 'Nearby pins grouped' : 'Showing every pin separately');
         renderMarkers(false);
