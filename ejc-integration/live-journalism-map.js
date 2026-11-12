@@ -61,9 +61,24 @@
     });
     return Math.min(need, size.x * 0.25);
   }
+  // Phones (Jacopo, 12 Nov 2026): show the Americas through to the Middle East, as wide as the screen allows,
+  // but never zoom out so far that grey bands appear above or below the world. Centred on the Atlantic.
+  var PHONE_CENTER = [15, -32];
+  var PHONE_SPAN = 185;   // degrees of longitude to aim for: roughly Canada's west coast to Saudi Arabia
+  function phoneView() {
+    var sz = map.getSize();
+    var zFill = Math.ceil(Math.log2(sz.y / 256) * 4) / 4;                     // world as tall as the map
+    var zSpan = Math.floor(Math.log2(sz.x / (PHONE_SPAN / 360 * 256)) * 4) / 4; // the span fits the width
+    var z = Math.max(0, zFill, zSpan);
+    // keep the view inside the world vertically (no band at the top or bottom)
+    var worldH = 256 * Math.pow(2, z), p = map.project(PHONE_CENTER, z);
+    p.y = Math.min(Math.max(p.y, sz.y / 2), worldH - sz.y / 2);
+    return { center: map.unproject(p, z), zoom: z };
+  }
   function homeView() {
     var z = worldZoom();
     if (typeof map === 'undefined' || !map) return { center: WORLD_CENTER, zoom: z };
+    if (MOBILE_Q.matches) return phoneView();
     var shift = keyShift(z, WORLD_CENTER);
     var c = shift ? map.unproject(map.project(WORLD_CENTER, z).subtract([shift, 0]), z) : WORLD_CENTER;
     return { center: c, zoom: z };
