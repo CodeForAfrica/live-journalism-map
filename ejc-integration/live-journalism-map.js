@@ -1,6 +1,12 @@
 (function () {
   'use strict';
 
+  // Optional page-level settings, set before this script runs (default: none). Used by the full-screen
+  // variant for its Equal Earth map; the standard page and ejc.net need none of them.
+  //   window.LJM_CONFIG = { crs, maxZoom, worldZoom(map), basemaps: { key: { label, note, type: 'fn',
+  //     make(map) -> layer, attr, swatch, muted } } }
+  var CFG = window.LJM_CONFIG || {};
+
   /* ------------------------------------------------------------------
      Config
   ------------------------------------------------------------------ */
@@ -40,6 +46,7 @@
   var WORLD_CENTER = [20, 10];
   function worldZoom() {
     if (typeof map === 'undefined' || !map) return 1;
+    if (CFG.worldZoom) return Math.max(0, CFG.worldZoom(map));
     return Math.max(0, map.getBoundsZoom(WORLD, false));
   }
   // The key sits bottom-left over the map. Nudge the default view right just enough that no pin is
@@ -61,7 +68,7 @@
     });
     return Math.min(need, size.x * 0.25);
   }
-  // Phones (Jacopo, 12 Nov 2026): show the Americas through to the Middle East, as wide as the screen allows,
+  // Phones (12 Nov 2026): show the Americas through to the Middle East, as wide as the screen allows,
   // but never zoom out so far that grey bands appear above or below the world. Centred on the Atlantic.
   var PHONE_CENTER = [15, -32];
   var PHONE_SPAN = 185;   // degrees of longitude to aim for: roughly Canada's west coast to Saudi Arabia
@@ -75,13 +82,54 @@
     p.y = Math.min(Math.max(p.y, sz.y / 2), worldH - sz.y / 2);
     return { center: map.unproject(p, z), zoom: z };
   }
-  function homeView() {
+  function baseView() {
     var z = worldZoom();
     if (typeof map === 'undefined' || !map) return { center: WORLD_CENTER, zoom: z };
     if (MOBILE_Q.matches) return phoneView();
     var shift = keyShift(z, WORLD_CENTER);
     var c = shift ? map.unproject(map.project(WORLD_CENTER, z).subtract([shift, 0]), z) : WORLD_CENTER;
     return { center: c, zoom: z };
+  }
+  // Optional settings on #ljm (default: none):
+  //   data-zoom-offset   start this many zoom levels closer than the default view, e.g. "1"
+  //   data-home-center   "lat,lng" to centre that closer view on, e.g. "44,8" (Europe)
+  // ?zoomOffset=1 in the address overrides data-zoom-offset, for testing.
+  var VIEW_SETTINGS = (function () {
+    var el = document.getElementById('ljm');
+    var q = new URLSearchParams(location.search).get('zoomOffset');
+    var off = +(q != null ? q : (el && el.getAttribute('data-zoom-offset')) || 0);
+    var c = ((el && el.getAttribute('data-home-center')) || '').split(',').map(Number);
+    return { offset: isFinite(off) ? off : 0, center: c.length === 2 && c.every(isFinite) ? c : null,
+      fit: !!el && el.getAttribute('data-home') === 'fit' };
+  })();
+  //   data-home="fit"    on desktop, open on the closest view that shows every pin (phones keep their view)
+  // Works in any projection: it measures the pins in screen pixels, not in degrees.
+  var FIT_PAD = { left: 64, right: 76, top: 76, bottom: 40 };   // clear of the zoom buttons, the tools and "Add your project"
+  function fitAllView() {
+    var pts = [];
+    entries.forEach(function (e) { e.locs.forEach(function (l) { pts.push(L.latLng(l.lat, l.lng)); }); });
+    if (!pts.length) return null;
+    var crs = map.options.crs, size = map.getSize();
+    function box(z) {
+      var b = L.bounds(pts.map(function (p) { return map.project(p, z); }));
+      return b;
+    }
+    var b0 = box(0), w = Math.max(b0.max.x - b0.min.x, 1), h = Math.max(b0.max.y - b0.min.y, 1);
+    var k = Math.min((size.x - FIT_PAD.left - FIT_PAD.right) / w, (size.y - FIT_PAD.top - FIT_PAD.bottom) / h);
+    var z = Math.floor(crs.zoom(k * crs.scale(0)) * 4) / 4;
+    z = Math.max(map.getMinZoom() || 0, Math.min(z, CFG.maxZoom || 19));
+    var bz = box(z);
+    var mid = bz.min.add(bz.max).divideBy(2).add([(FIT_PAD.right - FIT_PAD.left) / 2, (FIT_PAD.bottom - FIT_PAD.top) / 2]);
+    return { center: map.unproject(mid, z), zoom: z };
+  }
+  function homeView() {
+    if (VIEW_SETTINGS.fit && typeof map !== 'undefined' && map && !MOBILE_Q.matches) {
+      var f = fitAllView();
+      if (f) return f;
+    }
+    var v = baseView();
+    if (!VIEW_SETTINGS.offset) return v;
+    return { center: VIEW_SETTINGS.center || v.center, zoom: v.zoom + VIEW_SETTINGS.offset };
   }
   var MOBILE_Q = window.matchMedia('(max-width: 859px)');
 
@@ -382,9 +430,11 @@
   ------------------------------------------------------------------ */
   var ljm = $('#ljm');
   var map = L.map('resourceMap', {
+    crs: CFG.crs || L.CRS.EPSG3857,
+    maxZoom: CFG.maxZoom || 19,
     zoomControl: true,
     scrollWheelZoom: false,
-    worldCopyJump: true,
+    worldCopyJump: !CFG.crs,
     minZoom: 0,
     zoomSnap: 0.25,   // fractional zoom so the whole world fits any width exactly
     zoomDelta: 1,
@@ -449,7 +499,8 @@
       url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
       attr: 'Imagery: <a href="https://earthdata.nasa.gov/gibs" target="_blank" rel="noopener">NASA GIBS</a>, Blue Marble', swatch: 'linear-gradient(135deg,#2f5f3a 50%,#1b3f66 50%)' }
   };
-  if (mapEl.getAttribute('data-tile-url')) {
+  if (CFG.basemaps) BASEMAPS = CFG.basemaps;   // e.g. drawn country outlines for a non-Mercator projection
+  if (!CFG.basemaps && mapEl.getAttribute('data-tile-url')) {
     BASEMAPS.custom = { label: 'Map', note: '', type: 'raster', url: mapEl.getAttribute('data-tile-url'), attr: tileOpts.attribution,
       maxNativeZoom: tileOpts.maxZoom, subdomains: tileOpts.subdomains, swatch: '#e6e7e8' };
   }
@@ -466,7 +517,7 @@
     if (d && BASE_KEYS.indexOf(d) !== -1) return d;
     return BASE_KEYS.indexOf('positron') !== -1 ? 'positron' : BASE_KEYS[0];   // default: Light (OpenFreeMap Positron), 12 Nov 2026
   })();
-  map.setMaxZoom(19);   // the pin clusters need it even before a tile layer is added
+  map.setMaxZoom(CFG.maxZoom || 19);   // the pin clusters need it even before a tile layer is added
 
   // MapLibre (for the OpenFreeMap styles) loads only when one of them is picked
   var mlReady = null;
@@ -522,6 +573,7 @@
       L.DomEvent.disableClickPropagation(fileNote);
       return;
     }
+    if (b.type === 'fn') { swapBase(b.make(map), b.attr); return; }   // a layer the page draws itself
     if (b.type === 'vector') {
       loadMapLibre().then(function () {
         if (baseKey !== key) return;   // someone picked another style meanwhile

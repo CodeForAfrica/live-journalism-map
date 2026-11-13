@@ -1,12 +1,13 @@
-# Live Journalism Map: prototype
+# Mapping Live Journalism
 
-A proposed new version of the [European Journalism Centre](https://ejc.net)'s
-[Live Journalism map](https://ejc.net/resources/live-journalism-map), shared for EJC's review.
-**This is a draft, not the live ejc.net page.**
+A map of live journalism projects: projects that bring verified reporting to a live audience, on stage, in the
+street and in the community. It's curated by the [European Journalism Centre](https://ejc.net) (EJC), a member of
+[Plus](https://www.icfj.org/plus), and built by Code for Africa, also a member of Plus.
 
-**Preview:** https://codeforafrica.github.io/live-journalism-map/
+**Site (beta):** https://codeforafrica.github.io/live-journalism-map/
 
-Built by Code for Africa for EJC, fellow members of the Plus alliance.
+It started as a proposed new version of EJC's [Live Journalism map](https://ejc.net/resources/live-journalism-map)
+and is now a standalone microsite, co-branded EJC and Plus, that EJC can link to.
 
 ## What's in it
 
@@ -50,7 +51,7 @@ ejc.net, the template renders the form itself in that section.
 
 | Path | What it is |
 |---|---|
-| `index.html` | Standalone preview, one file. It shows the ejc.net header (logo and menu, linking to the real site) so the map can be seen in context; on ejc.net the site's own header is used |
+| `index.html` | The microsite, one file: co-branded header (EJC and Plus), the map and list, the section for adding a project, and a footer about the map, the data and privacy |
 | `og-image.jpg` | Link-preview image for WhatsApp, Slack and social media (1200×630) |
 | `ejc-integration/live-journalism-map.twig` | Template for ejc.net (Craft CMS): the map plus EJC's own entry form (Formie) under it |
 | `ejc-integration/live-journalism-map.css`, `.js` | The map's styles and script, for EJC's assets |
