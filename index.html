@@ -594,7 +594,8 @@ body{font-family:'Poppins','Segoe UI',Arial,sans-serif;font-size:15.5px;-webkit-
 
 /* the map component fills the rest of the window, edge to edge */
 main.page{max-width:none;padding:0}
-.page-head + .ljm,.ljm{margin:0!important;border:0;border-radius:0;box-shadow:none!important;
+.page-head + .ljm,.ljm{margin:0!important;border:0;border-radius:0;z-index:2;
+  box-shadow:0 18px 40px rgba(6,38,169,.18),0 2px 6px rgba(20,24,30,.08)!important;
   height:calc(100vh - var(--head-h));height:calc(100dvh - var(--head-h));display:flex;flex-direction:column}
 .ljm-toolbar{flex:none}
 .ljm-body{flex:1;min-height:0;height:auto!important;max-height:none!important}
@@ -660,6 +661,38 @@ main.page{padding-bottom:40px}
   .card__meta{font-size:13.5px}
   .ljm-detail__body{padding:16px 22px 28px}
   .ljm-detail__head{padding-left:22px;padding-right:22px}
+}
+
+/* ---------- eye candy (13 Nov 2026) ---------- */
+/* "Add your project": a light sweeps across every few seconds; the plus turns on hover */
+.ljm-cta,.submit-out__btn{position:relative;overflow:hidden;isolation:isolate}
+.ljm-cta::after,.submit-out__btn::after{content:"";position:absolute;inset:-2px auto -2px -60%;width:45%;z-index:-1;pointer-events:none;
+  background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.38) 32%,rgba(255,255,255,.62) 50%,rgba(255,255,255,.38) 68%,rgba(255,255,255,0) 100%);
+  transform:skewX(-18deg);animation:ljm-sheen 5.5s ease-in-out 1.2s infinite}
+@keyframes ljm-sheen{0%{left:-60%}22%,100%{left:130%}}
+.ljm-cta svg,.submit-out__btn svg{transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.ljm-cta:hover svg,.submit-out__btn:hover svg{transform:rotate(90deg) scale(1.15)}
+.ljm-cta:hover,.submit-out__btn:hover{box-shadow:0 6px 18px rgba(6,38,169,.35)!important}
+
+/* pins and groups pop onto the map when the page opens (only then, not on every zoom) */
+@keyframes ljm-pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.25);opacity:1}100%{transform:scale(1)}}
+.ljm.is-intro .ljm-pin__c,.ljm.is-intro .ljm-cluster__ring{animation:ljm-pop .55s cubic-bezier(.34,1.56,.64,1) backwards}
+.ljm.is-intro .leaflet-marker-icon:nth-child(5n+2) :is(.ljm-pin__c,.ljm-cluster__ring){animation-delay:.08s}
+.ljm.is-intro .leaflet-marker-icon:nth-child(5n+3) :is(.ljm-pin__c,.ljm-cluster__ring){animation-delay:.16s}
+.ljm.is-intro .leaflet-marker-icon:nth-child(5n+4) :is(.ljm-pin__c,.ljm-cluster__ring){animation-delay:.24s}
+.ljm.is-intro .leaflet-marker-icon:nth-child(5n) :is(.ljm-pin__c,.ljm-cluster__ring){animation-delay:.32s}
+
+/* list cards lift a little under the pointer */
+@media (hover:hover){
+  .card{transition:transform .2s ease,box-shadow .2s ease,background-color .2s ease}
+  .card:hover{transform:translateY(-2px);background:#fff;box-shadow:0 8px 22px rgba(6,38,169,.12)}
+  .card__img{transition:transform .35s ease}
+  .card:hover .card__img{transform:scale(1.04)}
+}
+@media (prefers-reduced-motion:reduce){
+  .ljm-cta::after,.submit-out__btn::after{animation:none;display:none}
+  .ljm.is-intro .ljm-pin__c,.ljm.is-intro .ljm-cluster__ring{animation:none}
+  .card:hover,.card:hover .card__img{transform:none}
 }
 </style>
 <style data-key>
@@ -2450,6 +2483,9 @@ main.page{padding-bottom:40px}
   b.addEventListener('click', function () { set(!ljm.classList.contains('is-list-hidden')); });
   body.appendChild(b);
   set(false);
+  // pins pop in once, when the page opens (see fullscreen.css)
+  ljm.classList.add('is-intro');
+  setTimeout(function () { ljm.classList.remove('is-intro'); }, 2600);
 })();
 </script>
 </body>
