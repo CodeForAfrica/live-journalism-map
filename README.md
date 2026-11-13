@@ -8,11 +8,14 @@ street and in the community. It's curated by the [European Journalism Centre](ht
 
 Three versions to compare, with the same data and features:
 
-- **Standard:** https://codeforafrica.github.io/live-journalism-map/
-- **Plus style** (fonts and backgrounds from theplusalliance.org):
-  https://codeforafrica.github.io/live-journalism-map/plus.html
-- **Full screen** (Plus style; the map fills the window, a wider list, every pin visible when it opens on
-  desktop, and a button to hide the list): https://codeforafrica.github.io/live-journalism-map/full.html
+- **Main (full screen, Plus style):** https://codeforafrica.github.io/live-journalism-map/ : the map fills the
+  window, a wider list, every pin visible when it opens on desktop, and a button to hide the list
+- **EJC style:** https://codeforafrica.github.io/live-journalism-map/ejc/ : the standard version, the look meant
+  for ejc.net
+- **Plus style:** https://codeforafrica.github.io/live-journalism-map/plus.html : fonts and backgrounds from
+  theplusalliance.org
+
+The old `full.html` address redirects to the main page.
 
 It started as a proposed new version of EJC's [Live Journalism map](https://ejc.net/resources/live-journalism-map)
 and is now a standalone microsite, co-branded EJC and Plus, that EJC can link to.
@@ -59,8 +62,10 @@ ejc.net, the template renders the form itself in that section.
 
 | Path | What it is |
 |---|---|
-| `index.html` | The microsite, one file: co-branded header (EJC and Plus), the map and list, the section for adding a project, and a footer about the map, the data and privacy |
-| `plus.html`, `full.html` | The Plus-style and full-screen versions, built from the same page |
+| `index.html` | The main page: the full-screen version, co-branded EJC and Plus, with the map, the list, the section for adding a project, and a footer about the map, the data and privacy |
+| `ejc/index.html` | The EJC-style (standard) version |
+| `plus.html` | The Plus-style version |
+| `full.html` | Redirects to the main page (the full-screen version used to be here) |
 | `og-image.jpg` | Link-preview image for WhatsApp, Slack and social media (1200×630) |
 | `ejc-integration/live-journalism-map.twig` | Template for ejc.net (Craft CMS): the map plus EJC's own entry form (Formie) under it |
 | `ejc-integration/live-journalism-map.css`, `.js` | The map's styles and script, for EJC's assets |
