@@ -694,6 +694,14 @@ main.page{padding-bottom:40px}
   .ljm.is-intro .ljm-pin__c,.ljm.is-intro .ljm-cluster__ring{animation:none}
   .card:hover,.card:hover .card__img{transform:none}
 }
+
+/* ---------- Plus mark assembles above the entry-form button (16 Nov 2026) ----------
+   The six blocks of the Plus logo fly in from the edges and lock together, red last; it holds, fades and repeats. */
+.plus-anim{display:block;width:64px;height:auto;overflow:visible;justify-self:center;margin:6px auto 14px}
+.plus-anim path{fill:var(--plus-blue,#0626a9);animation:plus-in 4.2s cubic-bezier(.2,.9,.3,1) infinite both}
+.plus-anim path:last-child{fill:#ED1C24}
+@keyframes plus-in{0%{transform:translate(var(--x),var(--y));opacity:0}22%,86%{transform:translate(0,0);opacity:1}100%{transform:translate(0,0);opacity:0}}
+@media (prefers-reduced-motion:reduce){ .plus-anim path{animation:none} }
 </style>
 <style data-key>
 /* the key folds into its button on desktop too: the type chips above the map already show the colours,
@@ -830,6 +838,7 @@ main.page{padding-bottom:40px}
         </ul>
       </div>
       <div class="submit-out__go">
+        <svg class="plus-anim" viewBox="0 0 1200 1221" aria-hidden="true" focusable="false"><path style="--x:0px;--y:-380px" d="M310 0h270v321H310z"/><path style="--x:380px;--y:-220px;animation-delay:.08s" d="M620 0h270v362h310v228H620z"/><path style="--x:-420px;--y:0px;animation-delay:.16s" d="M0 362h580v228H0z"/><path style="--x:-320px;--y:300px;animation-delay:.24s" d="M0 631h580v590H310V859H0z"/><path style="--x:420px;--y:0px;animation-delay:.32s" d="M620 631h580v228H620z"/><path style="--x:0px;--y:380px;animation-delay:.5s" d="M620 900h270v321H620z"/></svg>
         <a class="btn btn-primary submit-out__btn" href="https://ejc.net/live-journalism-entry#form-liveJournalismEntryForm" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
           Open the entry form on ejc.net <span aria-hidden="true">↗</span>
