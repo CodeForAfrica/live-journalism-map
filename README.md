@@ -66,7 +66,8 @@ ejc.net, the template renders the form itself in that section.
 | `ejc/index.html` | The EJC-style (standard) version |
 | `plus.html` | The Plus-style version |
 | `full.html` | Redirects to the main page (the full-screen version used to be here) |
-| `og-image.jpg` | Link-preview image for WhatsApp, Slack and social media (1200×630) |
+| `og-main.jpg`, `og-ejc.jpg` | Link-preview images for WhatsApp, Slack and social media (1200×630): the Plus-style one for the main page and `plus.html`, the white one for `/ejc/` |
+| `og-image.jpg` | The first link-preview image, kept so links shared before 17 Nov still show a picture |
 | `ejc-integration/live-journalism-map.twig` | Template for ejc.net (Craft CMS): the map plus EJC's own entry form (Formie) under it |
 | `ejc-integration/live-journalism-map.css`, `.js` | The map's styles and script, for EJC's assets |
 | `ejc-integration/test-harness.html` | Loads the integration files with the same data, for testing |
