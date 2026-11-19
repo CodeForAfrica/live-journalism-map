@@ -507,6 +507,16 @@
   var BASE_KEYS = (mapEl.getAttribute('data-basemaps') || Object.keys(BASEMAPS).join(','))
     .split(',').map(function (k) { return k.trim(); }).filter(function (k) { return BASEMAPS[k]; });
   if (BASEMAPS.custom && BASE_KEYS.indexOf('custom') === -1) BASE_KEYS.unshift('custom');
+  // The OpenFreeMap styles need WebGL. Some browsers don't offer it (Safari in Lockdown Mode, some privacy
+  // settings, graphics acceleration turned off): there the map stayed blank and the failed layer kept throwing on
+  // every move, which could leave the pins out of step with the background. Offer only the raster maps then.
+  var HAS_WEBGL = (function () {
+    try {
+      var c = document.createElement('canvas');
+      return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl')));
+    } catch (err) { return false; }
+  })();
+  if (!HAS_WEBGL) BASE_KEYS = BASE_KEYS.filter(function (k) { return BASEMAPS[k].type !== 'vector'; });
   if (!BASE_KEYS.length) BASE_KEYS = ['osm-grey'];
   var BASE_DEFAULT = (function () {
     var q = new URLSearchParams(location.search).get('basemap');
@@ -536,8 +546,15 @@
   var DARK_KEYS = ['dark', 'fiord'];
   var LIGHTS_KEY = BASE_KEYS.indexOf('dark') !== -1 ? 'dark' : BASE_KEYS.indexOf('fiord') !== -1 ? 'fiord' : null;
   // Credits are reset on every switch: the MapLibre plugin adds its style's credit itself and never removes it.
+  function dropLayer(layer) {
+    if (!layer) return;
+    try { map.removeLayer(layer); } catch (err) { /* a half-built WebGL layer can throw on removal */ }
+    try { if (layer.getEvents) map.off(layer.getEvents(), layer); } catch (err) {}
+    if (baseLayer === layer) baseLayer = null;
+  }
+  function rasterFallback() { return BASE_KEYS.indexOf('osm-grey') !== -1 ? 'osm-grey' : BASEMAPS.osm ? 'osm' : BASE_KEYS[0]; }
   function swapBase(layer, attr) {
-    if (baseLayer) map.removeLayer(baseLayer);
+    if (baseLayer) dropLayer(baseLayer);
     var ac = map.attributionControl;
     ac._attributions = {};
     if (attr) ac.addAttribution(attr); else ac._update();
@@ -575,13 +592,25 @@
     }
     if (b.type === 'fn') { swapBase(b.make(map), b.attr); return; }   // a layer the page draws itself
     if (b.type === 'vector') {
+      var fail = function (layer) {
+        dropLayer(layer);
+        if (baseKey !== key) return;
+        toast('That map style could not load. Showing OpenStreetMap instead.');
+        setBasemap(rasterFallback());
+      };
       loadMapLibre().then(function () {
         if (baseKey !== key) return;   // someone picked another style meanwhile
-        swapBase(L.maplibreGL({ style: b.style, interactive: false }));   // the style supplies its own credit
-      }, function () {
-        toast('That map style could not load. Showing OpenStreetMap instead.');
-        setBasemap(BASE_KEYS.indexOf('osm-grey') !== -1 ? 'osm-grey' : 'osm');
-      });
+        var layer = null, gl = null, loaded = false;
+        try {
+          layer = L.maplibreGL({ style: b.style, interactive: false });   // the style supplies its own credit
+          swapBase(layer);
+          gl = layer.getMaplibreMap && layer.getMaplibreMap();
+        } catch (err) { gl = null; }
+        if (!gl) { fail(layer); return; }
+        gl.once('load', function () { loaded = true; });
+        gl.on('error', function () { if (!loaded) fail(layer); });                    // style or first tiles failed
+        setTimeout(function () { if (!loaded && baseLayer === layer) fail(layer); }, 10000);   // blocked or too slow
+      }, function () { fail(null); });
       return;
     }
     var o = { maxZoom: 19 };
@@ -961,7 +990,7 @@
     // place
     var base = entries.filter(function (e) { return matches(e, 'place'); });
     var sel = $('#ljm-country');
-    var html = '<option value="">All countries (' + base.length + ')</option>';
+    var html = '<option value="">All countries</option>';   // no total here: it read like a count of countries
     // counts are projects: a project with places in two countries counts once in each, once overall
     function inRegion(e, r) { return e.locs.some(function (l) { return l.region === r; }); }
     function inCountry(e, c) { return e.locs.some(function (l) { return l.country === c; }); }

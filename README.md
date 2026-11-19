@@ -45,7 +45,7 @@ and is now a standalone microsite, co-branded EJC and Plus, that EJC can link to
 
 ## Data
 
-The map shows the 39 projects published on ejc.net's Live Journalism map as of 10 Nov 2026.
+The map shows the 47 projects published on ejc.net's Live Journalism map as of 19 Nov 2026, in 28 countries (54 places on the map, since one project can have several). Refresh: `scripts/build_from_live_page.py`, then `scripts/refresh_live_entries.py`, `scripts/demo_fields.py` and `scripts/make_fullscreen_variant.py`.
 
 **One test entry goes further:** Live Magazine shows how one project can have several places and dates while
 keeping one project page and one link, and counting once. Its Paris place is approved. The other seven places come
