@@ -526,6 +526,27 @@ main.page{padding-bottom:56px}
 @media (max-width:340px){ .cobrand__ejc-word{display:none} }
 @media (min-width:381px){ .site-nav__add .lbl-short{display:none} }
 </style>
+<style data-submit-glow>
+/* "Is your live journalism project missing?": glowing electric-blue border (#1028ee) */
+@property --ljm-glow-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+section#submit-project{position:relative;isolation:isolate;border-color:rgba(16,40,238,.55);
+  box-shadow:0 0 0 1px rgba(16,40,238,.35),0 0 16px rgba(16,40,238,.28),0 0 44px rgba(16,40,238,.14);
+  animation:ljm-glow-breathe 3.8s ease-in-out infinite}
+section#submit-project::before{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;pointer-events:none;z-index:1;
+  background:conic-gradient(from var(--ljm-glow-a),rgba(16,40,238,0) 0deg,rgba(16,40,238,.9) 70deg,#7d92ff 112deg,#dfe5ff 124deg,#7d92ff 136deg,rgba(16,40,238,.9) 178deg,rgba(16,40,238,0) 250deg,rgba(16,40,238,0) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+  animation:ljm-glow-spin 7s linear infinite}
+@keyframes ljm-glow-spin{to{--ljm-glow-a:360deg}}
+@keyframes ljm-glow-breathe{
+  0%,100%{box-shadow:0 0 0 1px rgba(16,40,238,.35),0 0 16px rgba(16,40,238,.26),0 0 44px rgba(16,40,238,.12)}
+  50%{box-shadow:0 0 0 1px rgba(16,40,238,.55),0 0 26px rgba(16,40,238,.42),0 0 70px rgba(16,40,238,.22)}}
+/* the scroll-to flash, then back to the glow */
+section#submit-project.is-flash{animation:flash 1.4s ease,ljm-glow-breathe 3.8s ease-in-out 1.4s infinite}
+@media (prefers-reduced-motion:reduce){
+  section#submit-project,section#submit-project.is-flash{animation:none}
+  section#submit-project::before{animation:none;--ljm-glow-a:200deg}}
+</style>
 <style data-plus-theme>
 /* ---------- Plus-style variant (13 Nov 2026) ----------
    Fonts and backgrounds taken from theplusalliance.org [verified: its CSS, fetched 13 Nov 2026]:
@@ -855,7 +876,7 @@ main.page{padding-bottom:40px}
     </div>
     <div>
       <h3>About the data</h3>
-      <p>The map shows the 39 projects published on EJC's Live Journalism map as of 10 November 2026. New projects come in through EJC's entry form.</p>
+      <p>The map shows the 47 projects published on EJC's Live Journalism map as of 19 November 2026. New projects come in through EJC's entry form.</p>
       <p>Live Magazine shows how one project can have several places and still count once: seven of its places come from submissions still awaiting EJC review, and their dates come from livemagazine.com.</p>
       <p>The names and contact details of people who submit projects are never shown.</p>
     </div>
