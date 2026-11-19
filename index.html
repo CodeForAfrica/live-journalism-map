@@ -1537,6 +1537,8 @@ main.page{padding-bottom:40px}
   // Phones start grouped (pins pile up on a small screen), desktop starts ungrouped (12 Nov 2026).
   var groupSetting = new URLSearchParams(location.search).get('group') || ljm.getAttribute('data-group');
   var grouped = groupSetting ? groupSetting === '1' : MOBILE_Q.matches;
+  // A project with several places opens with its places one by one; the group button then groups those (19 Nov 2026).
+  var soloGrouped = false;
 
   // One marker per place. Every marker of a project opens the same project panel and the same link.
   // Pin colour and icon = main format; small dots on the pin's shoulder = the other formats it's listed under.
@@ -1779,12 +1781,15 @@ main.page{padding-bottom:40px}
       }
       if (tool === 'fs') setFullscreen(!ljm.classList.contains('is-fs'));
       if (tool === 'group') {
-        grouped = !grouped;
-        b.setAttribute('aria-pressed', String(grouped));   // pressed = nearby pins grouped (donut on)
-        b.title = grouped ? 'Show every pin separately' : 'Group nearby pins';
-        toast(grouped ? 'Nearby pins grouped' : 'Showing every pin separately');
+        if (soloId) soloGrouped = !soloGrouped; else grouped = !grouped;
         renderMarkers(false);
-        setTimeout(function () { setActiveMarker(state.entry); }, 0);
+        setTimeout(function () {
+          setActiveMarker(state.entry);
+          // say what happened: at a close zoom the pins may be too far apart to group
+          var groups = map.getContainer().querySelectorAll('.leaflet-marker-pane .ljm-cluster').length;
+          toast(!groupOn() ? 'Showing every pin separately'
+            : groups ? 'Nearby pins grouped' : 'No pins are close enough to group at this zoom. Zoom out to see groups.');
+        }, 60);
       }
       if (tool === 'lights') {
         if (DARK_KEYS.indexOf(baseKey) !== -1) {
@@ -1960,16 +1965,30 @@ main.page{padding-bottom:40px}
     cluster.clearLayers();
     solo.clearLayers();
     flat.clearLayers();
-    if (soloId && BY_ID[soloId]) visibleLocs(BY_ID[soloId]).forEach(function (l) { solo.addLayer(markers[l.key]); });
+    if (soloId && BY_ID[soloId]) {
+      var soloLocs = visibleLocs(BY_ID[soloId]);
+      if (soloGrouped) cluster.addLayers(soloLocs.map(function (l) { return markers[l.key]; }));
+      else soloLocs.forEach(function (l) { solo.addLayer(markers[l.key]); });
+    }
     else if (!grouped) currentLocs.forEach(function (l) { flat.addLayer(markers[l.key]); });
     else cluster.addLayers(currentLocs.map(function (l) { return markers[l.key]; }));
+    syncGroupButton();
     if (fit) fitTo(currentLocs);
+  }
+  // The group button shows the grouping of what's on the map: one project's places, or all projects
+  function groupOn() { return soloId ? soloGrouped : grouped; }
+  function syncGroupButton() {
+    var b = $('[data-tool="group"]', map.getContainer());
+    if (!b) return;
+    b.setAttribute('aria-pressed', String(groupOn()));   // pressed = nearby pins grouped (donut on)
+    b.title = groupOn() ? 'Show every pin separately' : 'Group nearby pins';
   }
   // Turn the solo view on for a project with 2+ visible places, off otherwise. Returns true if it changed.
   function setSolo(e) {
     var want = (e && visibleLocs(e).length > 1) ? e.id : null;
     if (want === soloId) return false;
     soloId = want;
+    soloGrouped = false;   // a project's places always open one by one
     renderMarkers(false);
     return true;
   }
@@ -2259,7 +2278,7 @@ main.page{padding-bottom:40px}
       var li = +b.getAttribute('data-loc');
       var mk = markers[e.locs[li].key];
       if (!cluster.hasLayer(mk) && !solo.hasLayer(mk) && !flat.hasLayer(mk)) {   // that place is hidden by a filter: show it anyway
-        (soloId === e.id ? solo : grouped ? cluster : flat).addLayer(mk);
+        (soloId === e.id ? (soloGrouped ? cluster : solo) : grouped ? cluster : flat).addLayer(mk);
       }
       if (MOBILE_Q.matches) { setView('map'); detail.classList.add('is-peek'); }
       focusMarker(e, li);
